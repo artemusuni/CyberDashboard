@@ -4,6 +4,7 @@ const path    = require('path');
 const fs      = require('fs');
 const fetch   = require('node-fetch');
 const Parser  = require('rss-parser');
+const { saveAttacks, getDailyStats, getWeeklyStats, getMonthlyStats, getTopCountries, getCachedIp, setCachedIp } = require('./db');
 
 const app    = express();
 const PORT   = process.env.PORT || 3000;
@@ -96,6 +97,7 @@ async function fetchLiveAttacks() {
   if (arcs.length > 0) {
     writeAttackFileCache(arcs);
     attackMemCache = { fetchedAt: Date.now(), arcs };
+    saveAttacks(arcs);
   }
 
   return arcs.length > 0 ? arcs : (attackMemCache?.arcs ?? []);
@@ -192,6 +194,52 @@ app.get('/api/news', async (req, res) => {
     res.json(await fetchNews());
   } catch (e) {
     res.status(500).json({ error: 'Failed to fetch news' });
+  }
+});
+
+// ── IP detail drill-down ──
+app.get('/api/ip/:ip', async (req, res) => {
+  const ip = req.params.ip;
+
+  // Basic IP validation
+  if (!/^[\d.a-fA-F:]+$/.test(ip)) return res.status(400).json({ error: 'Invalid IP' });
+
+  const cached = getCachedIp(ip);
+  if (cached) return res.json(cached);
+
+  try {
+    const r = await fetch(
+      `https://api.abuseipdb.com/api/v2/check?ipAddress=${encodeURIComponent(ip)}&maxAgeInDays=90&verbose`,
+      { headers: { Key: process.env.ABUSEIPDB_KEY, Accept: 'application/json' } }
+    );
+    if (!r.ok) throw new Error(`AbuseIPDB ${r.status}`);
+    const { data } = await r.json();
+    setCachedIp(ip, data);
+    res.json(data);
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// ── Historical stats ──
+app.get('/api/history/:range', (req, res) => {
+  try {
+    const { range } = req.params;
+    if (range === 'day')   return res.json(getDailyStats());
+    if (range === 'week')  return res.json(getWeeklyStats());
+    if (range === 'month') return res.json(getMonthlyStats());
+    res.status(400).json({ error: 'Invalid range. Use day, week, or month.' });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// ── Top attacker countries ──
+app.get('/api/top-countries', (req, res) => {
+  try {
+    res.json(getTopCountries(10));
+  } catch (e) {
+    res.status(500).json({ error: e.message });
   }
 });
 

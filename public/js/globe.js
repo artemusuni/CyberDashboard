@@ -1,3 +1,5 @@
+import { showIpReport } from './ippanel.js';
+
 const SEVERITY_COLORS = {
   critical: '#ff2d55',
   warning:  '#ffd700',
@@ -26,7 +28,7 @@ const globe = Globe()(container)
   .arcEndLng(d => d.dstLng)
   .arcColor(d => SEVERITY_COLORS[d.severity])
   .arcAltitude(0.25)
-  .arcStroke(0.5)
+  .arcStroke(d => d.severity === 'critical' ? 0.8 : 0.5)
   .arcDashLength(0.4)
   .arcDashGap(0.3)
   .arcDashAnimateTime(2200)
@@ -48,10 +50,16 @@ const globe = Globe()(container)
         <div class="tt-route">${arc.srcName} → ${arc.dstName}</div>
         <div class="tt-detail">IP: ${arc.ip}</div>
         <div class="tt-detail">Reports: ${arc.reports} &nbsp;|&nbsp; Score: ${arc.score}</div>
+        <div class="tt-click-hint">Click for full report</div>
       `;
+      container.style.cursor = 'pointer';
     } else {
       tooltip.style.display = 'none';
+      container.style.cursor = '';
     }
+  })
+  .onArcClick(arc => {
+    if (arc) showIpReport(arc.ip, arc.srcName, arc.dstName, arc.severity);
   });
 
 globe.controls().autoRotate      = true;

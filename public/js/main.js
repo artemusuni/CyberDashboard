@@ -132,22 +132,50 @@ function animateCount(el, target) {
   }, 20);
 }
 
+// ── Chart range tabs ──
+let currentRange = 'day';
+document.querySelectorAll('.range-tab').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.range-tab').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    currentRange = btn.dataset.range;
+    window.Sounds?.click();
+    refreshChart();
+  });
+});
+
 // ── Fetch and render chart + topbar counter ──
 async function refreshChart() {
   try {
-    const res = await fetch('/api/attacks');
-    const { hours, data, total, weekTotal, peakHour } = await res.json();
-
-    attackChart.data.labels            = hours;
-    attackChart.data.datasets[0].data  = data;
-    attackChart.update();
-
-    animateCount(document.getElementById('todayCount'),       total);
-    animateCount(document.getElementById('weekCount'),        weekTotal);
-    animateCount(document.getElementById('totalAttackCount'), total);
-    document.getElementById('peakHour').textContent = peakHour;
+    if (currentRange === 'day') {
+      // Live generated data for current day
+      const res = await fetch('/api/attacks');
+      const { hours, data, total, weekTotal, peakHour } = await res.json();
+      attackChart.data.labels           = hours;
+      attackChart.data.datasets[0].data = data;
+      attackChart.update();
+      animateCount(document.getElementById('todayCount'),       total);
+      animateCount(document.getElementById('weekCount'),        weekTotal);
+      animateCount(document.getElementById('totalAttackCount'), total);
+      document.getElementById('peakHour').textContent = peakHour;
+    } else {
+      // Historical data from SQLite
+      const res  = await fetch(`/api/history/${currentRange}`);
+      const rows = await res.json();
+      const labels = rows.map(r => r.day || r.hour);
+      const data   = rows.map(r => r.count);
+      attackChart.data.labels           = labels.length > 0 ? labels : ['No data yet'];
+      attackChart.data.datasets[0].data = data.length > 0 ? data : [0];
+      attackChart.update();
+      if (data.length > 0) {
+        const total = data.reduce((a,b) => a+b, 0);
+        const peak  = labels[data.indexOf(Math.max(...data))];
+        animateCount(document.getElementById('todayCount'), total);
+        document.getElementById('peakHour').textContent = peak || '--';
+      }
+    }
   } catch (e) {
-    console.error('Failed to fetch attack data:', e);
+    console.error('Failed to fetch chart data:', e);
   }
 }
 

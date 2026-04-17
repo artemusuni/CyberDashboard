@@ -59,7 +59,11 @@
     <section class="panel panel-chart">
       <div class="panel-header">
         <span class="panel-title">[ ATTACK FREQUENCY ]</span>
-        <span class="panel-badge">24H</span>
+        <div class="range-tabs">
+          <button class="range-tab active" data-range="day">24H</button>
+          <button class="range-tab" data-range="week">7D</button>
+          <button class="range-tab" data-range="month">30D</button>
+        </div>
       </div>
       <div class="chart-container">
         <canvas id="attackChart"></canvas>
@@ -94,11 +98,23 @@
 
   </main>
 
+  <!-- IP Drill-down side panel -->
+  <div id="ipPanel" class="ip-panel">
+    <div class="ip-panel-header">
+      <span class="ip-panel-title">[ IP REPORT ]</span>
+      <button class="ip-panel-close" id="ipPanelClose">&times;</button>
+    </div>
+    <div class="ip-panel-body" id="ipPanelBody">
+      <div class="ip-loading">FETCHING REPORT...</div>
+    </div>
+  </div>
+  <div id="ipPanelOverlay" class="ip-panel-overlay"></div>
+
   <script src="//unpkg.com/globe.gl"></script>
   <script src="//cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="js/sound.js"></script>
   <script src="js/boot.js"></script>
   <script src="js/main.js"></script>
-  <script src="js/globe.js"></script>
+  <script type="module" src="js/globe.js"></script>
 </body>
 </html>
