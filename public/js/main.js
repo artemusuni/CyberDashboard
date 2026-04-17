@@ -11,6 +11,7 @@ setInterval(updateClock, 1000);
 const feed = document.getElementById('newsFeed');
 
 function renderNews(items) {
+  const prev = feed.querySelectorAll('.news-item').length;
   feed.innerHTML = items.map(n => `
     <a class="news-item" href="${n.link}" target="_blank" rel="noopener">
       <div class="news-item-top">
@@ -21,6 +22,11 @@ function renderNews(items) {
       <span class="news-time">${n.time}</span>
     </a>
   `).join('');
+
+  // Sound on new critical items appearing
+  if (prev > 0 && items.some(i => i.severity === 'critical')) {
+    window.Sounds?.alert();
+  }
 }
 
 function showNewsError() {
@@ -50,34 +56,31 @@ setInterval(refreshNews, 5 * 60 * 1000);
 // ── Chart.js setup ──
 const canvas = document.getElementById('attackChart');
 
-Chart.defaults.color = 'rgba(0,229,255,0.5)';
+Chart.defaults.color      = 'rgba(0,229,255,0.5)';
 Chart.defaults.font.family = "'Share Tech Mono', monospace";
-Chart.defaults.font.size = 11;
+Chart.defaults.font.size   = 11;
 
 const attackChart = new Chart(canvas, {
   type: 'bar',
   data: {
     labels: [],
-    datasets: [
-      {
-        label: 'Attacks',
-        data: [],
-        backgroundColor: ctx => {
-          const chart = ctx.chart;
-          const { ctx: c, chartArea } = chart;
-          if (!chartArea) return 'rgba(0,229,255,0.5)';
-          const grad = c.createLinearGradient(0, chartArea.top, 0, chartArea.bottom);
-          grad.addColorStop(0, 'rgba(0,229,255,0.8)');
-          grad.addColorStop(1, 'rgba(0,229,255,0.1)');
-          return grad;
-        },
-        borderColor: 'rgba(0,229,255,0.9)',
-        borderWidth: 1,
-        borderRadius: 2,
-        hoverBackgroundColor: 'rgba(0,255,136,0.7)',
-        hoverBorderColor: '#00ff88',
-      }
-    ]
+    datasets: [{
+      label: 'Attacks',
+      data: [],
+      backgroundColor: ctx => {
+        const { ctx: c, chartArea } = ctx.chart;
+        if (!chartArea) return 'rgba(0,229,255,0.5)';
+        const grad = c.createLinearGradient(0, chartArea.top, 0, chartArea.bottom);
+        grad.addColorStop(0, 'rgba(0,229,255,0.8)');
+        grad.addColorStop(1, 'rgba(0,229,255,0.1)');
+        return grad;
+      },
+      borderColor: 'rgba(0,229,255,0.9)',
+      borderWidth: 1,
+      borderRadius: 2,
+      hoverBackgroundColor: 'rgba(0,255,136,0.7)',
+      hoverBorderColor: '#00ff88',
+    }]
   },
   options: {
     responsive: true,
@@ -94,26 +97,23 @@ const attackChart = new Chart(canvas, {
         padding: 10,
         callbacks: {
           title: items => `[ ${items[0].label} ]`,
-          label: item => `  ATTACKS: ${item.raw.toLocaleString()}`,
+          label: item  => `  ATTACKS: ${item.raw.toLocaleString()}`,
         }
       }
     },
     scales: {
       x: {
-        grid: { color: 'rgba(0,229,255,0.05)', drawTicks: false },
+        grid:   { color: 'rgba(0,229,255,0.05)', drawTicks: false },
         border: { color: 'rgba(0,229,255,0.15)' },
-        ticks: {
-          maxTicksLimit: 8,
-          color: 'rgba(0,229,255,0.45)',
-        }
+        ticks:  { maxTicksLimit: 8, color: 'rgba(0,229,255,0.45)' },
       },
       y: {
-        grid: { color: 'rgba(0,229,255,0.05)', drawTicks: false },
-        border: { color: 'rgba(0,229,255,0.15)', dash: [4, 4] },
-        ticks: {
+        grid:   { color: 'rgba(0,229,255,0.05)', drawTicks: false },
+        border: { color: 'rgba(0,229,255,0.15)', dash: [4,4] },
+        ticks:  {
           color: 'rgba(0,229,255,0.45)',
-          callback: v => v >= 1000 ? (v / 1000).toFixed(1) + 'k' : v,
-        }
+          callback: v => v >= 1000 ? (v/1000).toFixed(1)+'k' : v,
+        },
       }
     }
   }
@@ -122,29 +122,29 @@ const attackChart = new Chart(canvas, {
 // ── Animated counter ──
 function animateCount(el, target) {
   const current = parseInt(el.textContent.replace(/,/g, '')) || 0;
-  const diff = target - current;
-  const steps = 30;
+  const diff    = target - current;
+  const steps   = 30;
   let step = 0;
   const timer = setInterval(() => {
     step++;
-    const val = Math.round(current + (diff * step) / steps);
-    el.textContent = val.toLocaleString();
+    el.textContent = Math.round(current + (diff * step) / steps).toLocaleString();
     if (step >= steps) clearInterval(timer);
   }, 20);
 }
 
-// ── Fetch and render chart data ──
+// ── Fetch and render chart + topbar counter ──
 async function refreshChart() {
   try {
     const res = await fetch('/api/attacks');
     const { hours, data, total, weekTotal, peakHour } = await res.json();
 
-    attackChart.data.labels = hours;
-    attackChart.data.datasets[0].data = data;
+    attackChart.data.labels            = hours;
+    attackChart.data.datasets[0].data  = data;
     attackChart.update();
 
-    animateCount(document.getElementById('todayCount'), total);
-    animateCount(document.getElementById('weekCount'), weekTotal);
+    animateCount(document.getElementById('todayCount'),       total);
+    animateCount(document.getElementById('weekCount'),        weekTotal);
+    animateCount(document.getElementById('totalAttackCount'), total);
     document.getElementById('peakHour').textContent = peakHour;
   } catch (e) {
     console.error('Failed to fetch attack data:', e);

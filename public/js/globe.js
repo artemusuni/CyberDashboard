@@ -101,16 +101,17 @@ let flashIdx = 0;
 function showFlash(arcs) {
   const critical = arcs.filter(a => a.severity === 'critical');
   if (critical.length === 0) return;
-  const arc   = critical[flashIdx % critical.length];
+  const arc = critical[flashIdx % critical.length];
   flashIdx++;
-  const el    = document.createElement('div');
-  el.className = 'attack-flash';
+  const el  = document.createElement('div');
+  el.className   = 'attack-flash';
   el.textContent = `! ATTACK DETECTED: ${arc.srcName} → ${arc.dstName}`;
   el.style.borderColor = SEVERITY_COLORS[arc.severity];
   el.style.color       = SEVERITY_COLORS[arc.severity];
   el.style.boxShadow   = `0 0 10px ${SEVERITY_COLORS[arc.severity]}55`;
   container.appendChild(el);
   setTimeout(() => el.remove(), 3000);
+  window.Sounds?.critical();
 }
 
 // ── Responsive ──

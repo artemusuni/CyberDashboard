@@ -10,6 +10,15 @@
 </head>
 <body>
 
+  <!-- Boot sequence overlay -->
+  <div id="bootOverlay">
+    <div class="boot-inner">
+      <div class="boot-logo">&gt;&gt; CYBER<span>DASHBOARD</span></div>
+      <div class="boot-lines" id="bootLines"></div>
+      <div class="boot-bar-wrap"><div class="boot-bar" id="bootBar"></div></div>
+    </div>
+  </div>
+
   <header class="topbar">
     <div class="topbar-left">
       <span class="logo">&gt;&gt; CYBER<span class="accent">DASHBOARD</span></span>
@@ -17,8 +26,14 @@
     <div class="topbar-center">
       <span class="status-dot"></span>
       <span class="status-text">LIVE FEED ACTIVE</span>
+      <span class="topbar-divider">|</span>
+      <span class="total-label">TOTAL ATTACKS TODAY:</span>
+      <span class="total-count" id="totalAttackCount">0</span>
     </div>
     <div class="topbar-right">
+      <button class="sound-btn" id="soundToggle" title="Toggle sounds">
+        <span id="soundIcon">&#128263;</span>
+      </button>
       <span id="clock"></span>
     </div>
   </header>
@@ -32,7 +47,7 @@
         <span class="panel-badge live">LIVE</span>
       </div>
       <div class="news-feed" id="newsFeed">
-        <div class="news-item placeholder">
+        <div class="news-item">
           <span class="news-tag warning">LOADING</span>
           <p>Fetching latest cyber threat intelligence...</p>
           <span class="news-time">--:--</span>
@@ -81,6 +96,8 @@
 
   <script src="//unpkg.com/globe.gl"></script>
   <script src="//cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="js/sound.js"></script>
+  <script src="js/boot.js"></script>
   <script src="js/main.js"></script>
   <script src="js/globe.js"></script>
 </body>
