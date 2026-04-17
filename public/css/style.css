@@ -209,6 +209,12 @@ body::after {
   flex: 1;
   padding: 16px;
   min-height: 0;
+  position: relative;
+}
+
+#attackChart {
+  width: 100% !important;
+  height: 100% !important;
 }
 
 .stat-row {
@@ -246,29 +252,12 @@ body::after {
 #globeContainer {
   flex: 1;
   position: relative;
+  overflow: hidden;
   background: radial-gradient(ellipse at center, #0d0d20 0%, #050508 100%);
 }
 
-.globe-placeholder {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-direction: column;
-  gap: 12px;
-  color: var(--text-dim);
-  font-size: 12px;
-  letter-spacing: 2px;
-}
-
-.globe-placeholder .spinner {
-  width: 32px;
-  height: 32px;
-  border: 2px solid var(--border);
-  border-top-color: var(--cyan);
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
+#globeContainer canvas {
+  display: block;
 }
 
 /* ── Animations ── */
@@ -294,6 +283,81 @@ body::after {
 @keyframes blink {
   0%, 100% { opacity: 1; }
   50%       { opacity: 0; }
+}
+
+/* ── Globe tooltip ── */
+#globeTooltip {
+  display: none;
+  position: fixed;
+  z-index: 100;
+  background: rgba(10,10,20,0.92);
+  border: 1px solid var(--cyan);
+  box-shadow: 0 0 12px rgba(0,229,255,0.3);
+  border-radius: 3px;
+  padding: 8px 12px;
+  pointer-events: none;
+  font-family: var(--font);
+}
+
+.tt-tag {
+  font-size: 9px;
+  letter-spacing: 2px;
+  margin-bottom: 4px;
+}
+.tt-tag.critical { color: var(--red); }
+.tt-tag.warning  { color: var(--yellow); }
+.tt-tag.info     { color: var(--cyan); }
+
+.tt-route {
+  font-size: 13px;
+  color: var(--text);
+}
+
+/* Globe.gl label override */
+.globe-label {
+  background: rgba(10,10,20,0.85);
+  border: 1px solid var(--cyan);
+  border-radius: 3px;
+  padding: 4px 8px;
+  font-family: var(--font);
+  font-size: 11px;
+  color: var(--text);
+  white-space: nowrap;
+}
+.globe-label-tag {
+  display: block;
+  font-size: 9px;
+  letter-spacing: 1px;
+  margin-bottom: 2px;
+}
+.globe-label-tag.critical { color: var(--red); }
+.globe-label-tag.warning  { color: var(--yellow); }
+.globe-label-tag.info     { color: var(--cyan); }
+
+/* ── Attack flash notification ── */
+.attack-flash {
+  position: absolute;
+  bottom: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(10,10,20,0.9);
+  border: 1px solid;
+  border-radius: 3px;
+  padding: 6px 14px;
+  font-family: var(--font);
+  font-size: 11px;
+  letter-spacing: 1px;
+  white-space: nowrap;
+  animation: flashIn 0.2s ease, flashOut 0.4s ease 2.6s forwards;
+  z-index: 10;
+}
+
+@keyframes flashIn {
+  from { opacity: 0; transform: translateX(-50%) translateY(8px); }
+  to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+@keyframes flashOut {
+  to { opacity: 0; transform: translateX(-50%) translateY(8px); }
 }
 
 /* ── Grid background on panels ── */

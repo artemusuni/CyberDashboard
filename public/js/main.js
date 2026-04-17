@@ -7,15 +7,6 @@ function updateClock() {
 updateClock();
 setInterval(updateClock, 1000);
 
-// ── Globe placeholder ──
-const globeContainer = document.getElementById('globeContainer');
-globeContainer.innerHTML = `
-  <div class="globe-placeholder">
-    <div class="spinner"></div>
-    <span>INITIALIZING GLOBE...</span>
-  </div>
-`;
-
 // ── News placeholder items ──
 const sampleNews = [
   { tag: 'critical', title: 'Ransomware group targets EU healthcare infrastructure', time: '2m ago' },
@@ -35,85 +26,109 @@ feed.innerHTML = sampleNews.map(n => `
   </div>
 `).join('');
 
-// ── Chart placeholder (Chart.js will be wired in Phase 4) ──
+// ── Chart.js setup ──
 const canvas = document.getElementById('attackChart');
-const ctx = canvas.getContext('2d');
 
-function drawPlaceholderChart() {
-  const w = canvas.width  = canvas.offsetWidth;
-  const h = canvas.height = canvas.offsetHeight;
+Chart.defaults.color = 'rgba(0,229,255,0.5)';
+Chart.defaults.font.family = "'Share Tech Mono', monospace";
+Chart.defaults.font.size = 11;
 
-  ctx.clearRect(0, 0, w, h);
-  ctx.fillStyle = 'rgba(0,229,255,0.06)';
-  ctx.strokeStyle = 'rgba(0,229,255,0.5)';
-  ctx.lineWidth = 1.5;
-
-  const labels = Array.from({ length: 24 }, (_, i) => `${String(i).padStart(2,'0')}:00`);
-  const data   = Array.from({ length: 24 }, () => Math.floor(Math.random() * 800 + 100));
-
-  const padL = 40, padR = 16, padT = 16, padB = 28;
-  const cw = w - padL - padR;
-  const ch = h - padT - padB;
-  const max = Math.max(...data);
-
-  // Grid lines
-  ctx.strokeStyle = 'rgba(0,229,255,0.08)';
-  ctx.lineWidth = 1;
-  for (let i = 0; i <= 4; i++) {
-    const y = padT + (ch / 4) * i;
-    ctx.beginPath(); ctx.moveTo(padL, y); ctx.lineTo(padL + cw, y); ctx.stroke();
-    ctx.fillStyle = 'rgba(0,229,255,0.4)';
-    ctx.font = '10px Share Tech Mono';
-    ctx.fillText(Math.round(max - (max / 4) * i), 4, y + 4);
-  }
-
-  // Area fill
-  ctx.beginPath();
-  data.forEach((v, i) => {
-    const x = padL + (cw / 23) * i;
-    const y = padT + ch - (v / max) * ch;
-    i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
-  });
-  ctx.lineTo(padL + cw, padT + ch);
-  ctx.lineTo(padL, padT + ch);
-  ctx.closePath();
-  const grad = ctx.createLinearGradient(0, padT, 0, padT + ch);
-  grad.addColorStop(0, 'rgba(0,229,255,0.25)');
-  grad.addColorStop(1, 'rgba(0,229,255,0.01)');
-  ctx.fillStyle = grad;
-  ctx.fill();
-
-  // Line
-  ctx.beginPath();
-  ctx.strokeStyle = 'rgba(0,229,255,0.9)';
-  ctx.lineWidth = 2;
-  ctx.shadowColor = '#00e5ff';
-  ctx.shadowBlur = 8;
-  data.forEach((v, i) => {
-    const x = padL + (cw / 23) * i;
-    const y = padT + ch - (v / max) * ch;
-    i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
-  });
-  ctx.stroke();
-  ctx.shadowBlur = 0;
-
-  // X labels (every 4h)
-  ctx.fillStyle = 'rgba(0,229,255,0.4)';
-  ctx.font = '10px Share Tech Mono';
-  labels.forEach((l, i) => {
-    if (i % 4 === 0) {
-      const x = padL + (cw / 23) * i;
-      ctx.fillText(l, x - 14, h - 6);
+const attackChart = new Chart(canvas, {
+  type: 'bar',
+  data: {
+    labels: [],
+    datasets: [
+      {
+        label: 'Attacks',
+        data: [],
+        backgroundColor: ctx => {
+          const chart = ctx.chart;
+          const { ctx: c, chartArea } = chart;
+          if (!chartArea) return 'rgba(0,229,255,0.5)';
+          const grad = c.createLinearGradient(0, chartArea.top, 0, chartArea.bottom);
+          grad.addColorStop(0, 'rgba(0,229,255,0.8)');
+          grad.addColorStop(1, 'rgba(0,229,255,0.1)');
+          return grad;
+        },
+        borderColor: 'rgba(0,229,255,0.9)',
+        borderWidth: 1,
+        borderRadius: 2,
+        hoverBackgroundColor: 'rgba(0,255,136,0.7)',
+        hoverBorderColor: '#00ff88',
+      }
+    ]
+  },
+  options: {
+    responsive: true,
+    maintainAspectRatio: false,
+    animation: { duration: 600, easing: 'easeInOutQuart' },
+    plugins: {
+      legend: { display: false },
+      tooltip: {
+        backgroundColor: 'rgba(10,10,20,0.95)',
+        borderColor: 'rgba(0,229,255,0.6)',
+        borderWidth: 1,
+        titleColor: '#00e5ff',
+        bodyColor: '#c0c0d0',
+        padding: 10,
+        callbacks: {
+          title: items => `[ ${items[0].label} ]`,
+          label: item => `  ATTACKS: ${item.raw.toLocaleString()}`,
+        }
+      }
+    },
+    scales: {
+      x: {
+        grid: { color: 'rgba(0,229,255,0.05)', drawTicks: false },
+        border: { color: 'rgba(0,229,255,0.15)' },
+        ticks: {
+          maxTicksLimit: 8,
+          color: 'rgba(0,229,255,0.45)',
+        }
+      },
+      y: {
+        grid: { color: 'rgba(0,229,255,0.05)', drawTicks: false },
+        border: { color: 'rgba(0,229,255,0.15)', dash: [4, 4] },
+        ticks: {
+          color: 'rgba(0,229,255,0.45)',
+          callback: v => v >= 1000 ? (v / 1000).toFixed(1) + 'k' : v,
+        }
+      }
     }
-  });
+  }
+});
 
-  // Stats
-  const total = data.reduce((a, b) => a + b, 0);
-  const peakIdx = data.indexOf(max);
-  document.getElementById('todayCount').textContent = total.toLocaleString();
-  document.getElementById('weekCount').textContent  = (total * 7).toLocaleString();
-  document.getElementById('peakHour').textContent   = labels[peakIdx];
+// ── Animated counter ──
+function animateCount(el, target) {
+  const current = parseInt(el.textContent.replace(/,/g, '')) || 0;
+  const diff = target - current;
+  const steps = 30;
+  let step = 0;
+  const timer = setInterval(() => {
+    step++;
+    const val = Math.round(current + (diff * step) / steps);
+    el.textContent = val.toLocaleString();
+    if (step >= steps) clearInterval(timer);
+  }, 20);
 }
 
-drawPlaceholderChart();
-window.addEventListener('resize', drawPlaceholderChart);
+// ── Fetch and render chart data ──
+async function refreshChart() {
+  try {
+    const res = await fetch('/api/attacks');
+    const { hours, data, total, weekTotal, peakHour } = await res.json();
+
+    attackChart.data.labels = hours;
+    attackChart.data.datasets[0].data = data;
+    attackChart.update();
+
+    animateCount(document.getElementById('todayCount'), total);
+    animateCount(document.getElementById('weekCount'), weekTotal);
+    document.getElementById('peakHour').textContent = peakHour;
+  } catch (e) {
+    console.error('Failed to fetch attack data:', e);
+  }
+}
+
+refreshChart();
+setInterval(refreshChart, 30000);
