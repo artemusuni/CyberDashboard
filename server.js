@@ -10,6 +10,13 @@ const app    = express();
 const PORT   = process.env.PORT || 3000;
 const parser = new Parser({ timeout: 8000 });
 
+// ── First-run check ──
+function isConfigured() {
+  return !!(process.env.ABUSEIPDB_KEY && process.env.ABUSEIPDB_KEY !== 'your_api_key_here');
+}
+
+app.use(express.json());
+
 // ── Country code → { lat, lng, name } ──
 const COUNTRY_COORDS = {
   US:{lat:37.09,lng:-95.71,name:'United States'},  CN:{lat:35.86,lng:104.19,name:'China'},
@@ -174,6 +181,44 @@ function generateHourlyData() {
 
 // ── Routes ──
 app.use(express.static(path.join(__dirname, 'public')));
+
+// Redirect to setup if not configured
+app.use((req, res, next) => {
+  if (!isConfigured() && req.path !== '/setup.html' && !req.path.startsWith('/api/setup')) {
+    return res.redirect('/setup.html');
+  }
+  next();
+});
+
+// ── Health check ──
+app.get('/api/health', (req, res) => {
+  res.json({
+    status:      'ok',
+    configured:  isConfigured(),
+    uptime:      Math.floor(process.uptime()),
+    timestamp:   new Date().toISOString(),
+  });
+});
+
+// ── Setup wizard ──
+app.post('/api/setup', (req, res) => {
+  const { key } = req.body;
+  if (!key || typeof key !== 'string' || key.trim().length < 20) {
+    return res.status(400).json({ error: 'Invalid API key' });
+  }
+
+  const envPath    = path.join(__dirname, '.env');
+  const envContent = `ABUSEIPDB_KEY=${key.trim()}\nPORT=${PORT}\n`;
+
+  try {
+    fs.writeFileSync(envPath, envContent);
+    // Hot-reload the key so server doesn't need restart
+    process.env.ABUSEIPDB_KEY = key.trim();
+    res.json({ ok: true });
+  } catch (e) {
+    res.status(500).json({ error: 'Failed to write .env: ' + e.message });
+  }
+});
 
 app.get('/api/live-attacks', async (req, res) => {
   try {
