@@ -163,12 +163,16 @@ body::after {
 .news-feed::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
 
 .news-item {
+  display: block;
   border: 1px solid var(--border);
   border-radius: 3px;
   padding: 10px;
   background: rgba(0,0,0,0.3);
   transition: border-color 0.2s, box-shadow 0.2s;
   animation: fadeIn 0.4s ease;
+  text-decoration: none;
+  color: inherit;
+  cursor: pointer;
 }
 
 .news-item:hover {
@@ -176,12 +180,25 @@ body::after {
   box-shadow: 0 0 10px rgba(0,229,255,0.12);
 }
 
+.news-item-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+
+.news-source {
+  font-size: 9px;
+  color: var(--text-dim);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
 .news-tag {
   display: inline-block;
   font-size: 9px;
   padding: 1px 6px;
   border-radius: 2px;
-  margin-bottom: 6px;
   letter-spacing: 1px;
 }
 

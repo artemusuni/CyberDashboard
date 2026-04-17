@@ -2,7 +2,6 @@
   "name": "cyberdashboard",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
@@ -20,6 +19,8 @@
   },
   "homepage": "https://github.com/artemusuni/CyberDashboard#readme",
   "dependencies": {
-    "express": "^5.2.1"
+    "express": "^5.2.1",
+    "node-fetch": "^2.7.0",
+    "rss-parser": "^3.13.0"
   }
 }

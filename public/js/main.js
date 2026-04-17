@@ -7,24 +7,45 @@ function updateClock() {
 updateClock();
 setInterval(updateClock, 1000);
 
-// ── News placeholder items ──
-const sampleNews = [
-  { tag: 'critical', title: 'Ransomware group targets EU healthcare infrastructure', time: '2m ago' },
-  { tag: 'warning',  title: 'New zero-day in OpenSSH actively exploited in the wild', time: '14m ago' },
-  { tag: 'info',     title: 'CISA issues advisory on critical ICS vulnerabilities', time: '31m ago' },
-  { tag: 'warning',  title: 'DDoS attacks spike 40% targeting financial sector', time: '58m ago' },
-  { tag: 'critical', title: 'Supply chain attack compromises popular npm package', time: '1h ago' },
-  { tag: 'info',     title: 'Patch Tuesday: Microsoft fixes 4 zero-days', time: '2h ago' },
-];
-
+// ── Live News Feed ──
 const feed = document.getElementById('newsFeed');
-feed.innerHTML = sampleNews.map(n => `
-  <div class="news-item">
-    <span class="news-tag ${n.tag}">${n.tag.toUpperCase()}</span>
-    <p>${n.title}</p>
-    <span class="news-time">${n.time}</span>
-  </div>
-`).join('');
+
+function renderNews(items) {
+  feed.innerHTML = items.map(n => `
+    <a class="news-item" href="${n.link}" target="_blank" rel="noopener">
+      <div class="news-item-top">
+        <span class="news-tag ${n.severity}">${n.severity.toUpperCase()}</span>
+        <span class="news-source">${n.source}</span>
+      </div>
+      <p>${n.title}</p>
+      <span class="news-time">${n.time}</span>
+    </a>
+  `).join('');
+}
+
+function showNewsError() {
+  feed.innerHTML = `
+    <div class="news-item">
+      <span class="news-tag warning">OFFLINE</span>
+      <p>Unable to reach threat intelligence feeds. Retrying...</p>
+      <span class="news-time">--</span>
+    </div>`;
+}
+
+async function refreshNews() {
+  try {
+    const res = await fetch('/api/news');
+    if (!res.ok) throw new Error('bad response');
+    const items = await res.json();
+    if (items.length > 0) renderNews(items);
+    else showNewsError();
+  } catch {
+    showNewsError();
+  }
+}
+
+refreshNews();
+setInterval(refreshNews, 5 * 60 * 1000);
 
 // ── Chart.js setup ──
 const canvas = document.getElementById('attackChart');
