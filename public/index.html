@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CyberDashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+  <header class="topbar">
+    <div class="topbar-left">
+      <span class="logo">&gt;&gt; CYBER<span class="accent">DASHBOARD</span></span>
+    </div>
+    <div class="topbar-center">
+      <span class="status-dot"></span>
+      <span class="status-text">LIVE FEED ACTIVE</span>
+    </div>
+    <div class="topbar-right">
+      <span id="clock"></span>
+    </div>
+  </header>
+
+  <main class="dashboard">
+
+    <!-- LEFT: News Feed -->
+    <section class="panel panel-news">
+      <div class="panel-header">
+        <span class="panel-title">[ THREAT INTELLIGENCE ]</span>
+        <span class="panel-badge live">LIVE</span>
+      </div>
+      <div class="news-feed" id="newsFeed">
+        <div class="news-item placeholder">
+          <span class="news-tag warning">LOADING</span>
+          <p>Fetching latest cyber threat intelligence...</p>
+          <span class="news-time">--:--</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- CENTER: Chart -->
+    <section class="panel panel-chart">
+      <div class="panel-header">
+        <span class="panel-title">[ ATTACK FREQUENCY ]</span>
+        <span class="panel-badge">24H</span>
+      </div>
+      <div class="chart-container">
+        <canvas id="attackChart"></canvas>
+      </div>
+      <div class="stat-row">
+        <div class="stat">
+          <span class="stat-label">TODAY</span>
+          <span class="stat-value" id="todayCount">0</span>
+        </div>
+        <div class="stat">
+          <span class="stat-label">THIS WEEK</span>
+          <span class="stat-value" id="weekCount">0</span>
+        </div>
+        <div class="stat">
+          <span class="stat-label">PEAK HOUR</span>
+          <span class="stat-value" id="peakHour">--:--</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- RIGHT: Globe -->
+    <section class="panel panel-globe">
+      <div class="panel-header">
+        <span class="panel-title">[ GLOBAL ATTACK MAP ]</span>
+        <span class="panel-badge live">LIVE</span>
+      </div>
+      <div id="globeContainer"></div>
+    </section>
+
+  </main>
+
+  <script src="js/main.js"></script>
+</body>
+</html>
