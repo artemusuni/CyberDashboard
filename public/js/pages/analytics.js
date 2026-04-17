@@ -1,3 +1,5 @@
+import { errorScreen } from '../error.js';
+
 let charts = [];
 
 function destroyCharts() {
@@ -40,6 +42,7 @@ function neonBar(ctx, labels, data, color = '#00e5ff') {
 }
 
 export async function mountAnalytics(container) {
+  try {
   container.innerHTML = `
     <div class="analytics-shell">
       <div class="analytics-header">
@@ -159,6 +162,9 @@ export async function mountAnalytics(container) {
   } catch (e) {
     container.querySelector('.analytics-grid').innerHTML =
       `<div class="page-error"><span class="news-tag warning">ERROR</span><p>${e.message}</p></div>`;
+  }
+  } catch (e) {
+    errorScreen(container, e.message, () => mountAnalytics(container));
   }
 }
 
