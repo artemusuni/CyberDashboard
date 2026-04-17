@@ -10,7 +10,7 @@
 </head>
 <body>
 
-  <!-- Boot sequence overlay -->
+  <!-- Boot overlay -->
   <div id="bootOverlay">
     <div class="boot-inner">
       <div class="boot-logo">&gt;&gt; CYBER<span>DASHBOARD</span></div>
@@ -19,8 +19,20 @@
     </div>
   </div>
 
+  <!-- IP Drill-down panel -->
+  <div id="ipPanel" class="ip-panel">
+    <div class="ip-panel-header">
+      <span class="ip-panel-title">[ IP REPORT ]</span>
+      <button class="ip-panel-close" id="ipPanelClose">&times;</button>
+    </div>
+    <div class="ip-panel-body" id="ipPanelBody"></div>
+  </div>
+  <div id="ipPanelOverlay" class="ip-panel-overlay"></div>
+
+  <!-- Topbar -->
   <header class="topbar">
     <div class="topbar-left">
+      <button class="sidebar-toggle" id="sidebarToggle">&#9776;</button>
       <span class="logo">&gt;&gt; CYBER<span class="accent">DASHBOARD</span></span>
     </div>
     <div class="topbar-center">
@@ -38,77 +50,111 @@
     </div>
   </header>
 
-  <main class="dashboard">
+  <!-- App shell -->
+  <div class="app-shell">
 
-    <!-- LEFT: News Feed -->
-    <section class="panel panel-news">
-      <div class="panel-header">
-        <span class="panel-title">[ THREAT INTELLIGENCE ]</span>
-        <span class="panel-badge live">LIVE</span>
-      </div>
-      <div class="news-feed" id="newsFeed">
-        <div class="news-item">
-          <span class="news-tag warning">LOADING</span>
-          <p>Fetching latest cyber threat intelligence...</p>
-          <span class="news-time">--:--</span>
-        </div>
-      </div>
-    </section>
+    <!-- Sidebar -->
+    <nav class="sidebar" id="sidebar">
+      <ul class="nav-list">
+        <li class="nav-item active" data-page="dashboard">
+          <span class="nav-icon">&#9643;</span>
+          <span class="nav-label">DASHBOARD</span>
+        </li>
+        <li class="nav-item" data-page="threatmap">
+          <span class="nav-icon">&#9685;</span>
+          <span class="nav-label">THREAT MAP</span>
+        </li>
+        <li class="nav-item" data-page="analytics">
+          <span class="nav-icon">&#9636;</span>
+          <span class="nav-label">ANALYTICS</span>
+        </li>
+        <li class="nav-item" data-page="iplookup">
+          <span class="nav-icon">&#9906;</span>
+          <span class="nav-label">IP LOOKUP</span>
+        </li>
+        <li class="nav-item" data-page="settings">
+          <span class="nav-icon">&#9881;</span>
+          <span class="nav-label">SETTINGS</span>
+        </li>
+      </ul>
+      <div class="nav-footer">v1.0 // SECURE</div>
+    </nav>
 
-    <!-- CENTER: Chart -->
-    <section class="panel panel-chart">
-      <div class="panel-header">
-        <span class="panel-title">[ ATTACK FREQUENCY ]</span>
-        <div class="range-tabs">
-          <button class="range-tab active" data-range="day">24H</button>
-          <button class="range-tab" data-range="week">7D</button>
-          <button class="range-tab" data-range="month">30D</button>
-        </div>
-      </div>
-      <div class="chart-container">
-        <canvas id="attackChart"></canvas>
-      </div>
-      <div class="stat-row">
-        <div class="stat">
-          <span class="stat-label">TODAY</span>
-          <span class="stat-value" id="todayCount">0</span>
-        </div>
-        <div class="stat">
-          <span class="stat-label">THIS WEEK</span>
-          <span class="stat-value" id="weekCount">0</span>
-        </div>
-        <div class="stat">
-          <span class="stat-label">PEAK HOUR</span>
-          <span class="stat-value" id="peakHour">--:--</span>
-        </div>
-      </div>
-    </section>
+    <!-- Page content -->
+    <div id="app">
 
-    <!-- RIGHT: Globe -->
-    <section class="panel panel-globe">
-      <div class="panel-header">
-        <span class="panel-title">[ GLOBAL ATTACK MAP ]</span>
-        <div class="panel-header-right">
-          <span class="live-count">TRACKED: <span id="liveAttackCount">0</span></span>
-          <span class="panel-badge live">LIVE</span>
+      <!-- PAGE: Dashboard -->
+      <div class="page active" id="page-dashboard">
+        <div class="dashboard">
+          <section class="panel panel-news">
+            <div class="panel-header">
+              <span class="panel-title">[ THREAT INTELLIGENCE ]</span>
+              <span class="panel-badge live">LIVE</span>
+            </div>
+            <div class="news-feed" id="newsFeed">
+              <div class="news-item">
+                <span class="news-tag warning">LOADING</span>
+                <p>Fetching latest cyber threat intelligence...</p>
+                <span class="news-time">--:--</span>
+              </div>
+            </div>
+          </section>
+
+          <section class="panel panel-chart">
+            <div class="panel-header">
+              <span class="panel-title">[ ATTACK FREQUENCY ]</span>
+              <div class="range-tabs">
+                <button class="range-tab active" data-range="day">24H</button>
+                <button class="range-tab" data-range="week">7D</button>
+                <button class="range-tab" data-range="month">30D</button>
+              </div>
+            </div>
+            <div class="chart-container">
+              <canvas id="attackChart"></canvas>
+            </div>
+            <div class="stat-row">
+              <div class="stat">
+                <span class="stat-label">TODAY</span>
+                <span class="stat-value" id="todayCount">0</span>
+              </div>
+              <div class="stat">
+                <span class="stat-label">THIS WEEK</span>
+                <span class="stat-value" id="weekCount">0</span>
+              </div>
+              <div class="stat">
+                <span class="stat-label">PEAK HOUR</span>
+                <span class="stat-value" id="peakHour">--:--</span>
+              </div>
+            </div>
+          </section>
+
+          <section class="panel panel-globe">
+            <div class="panel-header">
+              <span class="panel-title">[ GLOBAL ATTACK MAP ]</span>
+              <div class="panel-header-right">
+                <span class="live-count">TRACKED: <span id="liveAttackCount">0</span></span>
+                <span class="panel-badge live">LIVE</span>
+              </div>
+            </div>
+            <div id="globeContainer"></div>
+          </section>
         </div>
       </div>
-      <div id="globeContainer"></div>
-    </section>
 
-  </main>
+      <!-- PAGE: Threat Map -->
+      <div class="page" id="page-threatmap"></div>
 
-  <!-- IP Drill-down side panel -->
-  <div id="ipPanel" class="ip-panel">
-    <div class="ip-panel-header">
-      <span class="ip-panel-title">[ IP REPORT ]</span>
-      <button class="ip-panel-close" id="ipPanelClose">&times;</button>
-    </div>
-    <div class="ip-panel-body" id="ipPanelBody">
-      <div class="ip-loading">FETCHING REPORT...</div>
+      <!-- PAGE: Analytics -->
+      <div class="page" id="page-analytics"></div>
+
+      <!-- PAGE: IP Lookup -->
+      <div class="page" id="page-iplookup"></div>
+
+      <!-- PAGE: Settings -->
+      <div class="page" id="page-settings"></div>
+
     </div>
   </div>
-  <div id="ipPanelOverlay" class="ip-panel-overlay"></div>
 
   <script src="//unpkg.com/globe.gl"></script>
   <script src="//cdn.jsdelivr.net/npm/chart.js"></script>
@@ -116,5 +162,6 @@
   <script src="js/boot.js"></script>
   <script src="js/main.js"></script>
   <script type="module" src="js/globe.js"></script>
+  <script type="module" src="js/router.js"></script>
 </body>
 </html>
