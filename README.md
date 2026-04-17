@@ -76,6 +76,29 @@ npm start
 
 Open [http://localhost:3000](http://localhost:3000) in your browser.
 
+> **First run:** if no `.env` is present, the dashboard will redirect you to a setup wizard automatically.
+
+---
+
+### Docker (recommended)
+
+```bash
+# 1. Clone the repo
+git clone https://github.com/artemusuni/CyberDashboard.git
+cd CyberDashboard
+
+# 2. Create your .env
+cp .env.example .env
+# Edit .env and add your AbuseIPDB key
+
+# 3. Start
+docker compose up -d
+```
+
+Open [http://localhost:3000](http://localhost:3000) — that's it.
+
+Attack data is persisted in a named Docker volume so history survives container restarts.
+
 ---
 
 ## Data & Caching

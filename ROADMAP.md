@@ -50,7 +50,7 @@
 |--------|---------|
 | ✅ | `.env.example` with all variables documented |
 | ✅ | First-run setup wizard — redirect to config page if no API key |
-| ⬜ 🔥 | `Dockerfile` + `docker-compose.yml` |
+| ✅ | `Dockerfile` + `docker-compose.yml` |
 | ⬜ | Graceful error boundaries on all pages (no white screens) |
 | ⬜ | Health check endpoint `/api/health` |
 | ⬜ | README Docker setup instructions |
