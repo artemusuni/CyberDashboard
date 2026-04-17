@@ -122,6 +122,23 @@ body::after {
   flex-shrink: 0;
 }
 
+.panel-header-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.live-count {
+  font-size: 10px;
+  color: var(--text-dim);
+  letter-spacing: 1px;
+}
+
+.live-count span {
+  color: var(--red);
+  text-shadow: var(--glow-r);
+}
+
 .panel-title {
   color: var(--cyan);
   font-size: 11px;
@@ -328,6 +345,12 @@ body::after {
 .tt-route {
   font-size: 13px;
   color: var(--text);
+}
+
+.tt-detail {
+  font-size: 10px;
+  color: var(--text-dim);
+  margin-top: 3px;
 }
 
 /* Globe.gl label override */
