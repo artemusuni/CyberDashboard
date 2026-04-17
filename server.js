@@ -1,6 +1,7 @@
 require('dotenv').config();
 const express = require('express');
 const path    = require('path');
+const fs      = require('fs');
 const fetch   = require('node-fetch');
 const Parser  = require('rss-parser');
 
@@ -30,47 +31,74 @@ const COUNTRY_COORDS = {
 // Common targets for attack arcs
 const TARGETS = ['US','GB','DE','FR','JP','AU','CA','SG','NL','IT'];
 
-// ── AbuseIPDB live blacklist ──
-let attackCache     = [];
-let attackFetchedAt = 0;
-const ATTACK_TTL    = 2 * 60 * 1000; // 2 minutes
+// ── AbuseIPDB live blacklist with file-based persistent cache ──
+const ATTACK_CACHE_FILE = path.join(__dirname, 'cache', 'attacks.json');
+const ATTACK_TTL        = 2 * 60 * 60 * 1000; // 2 hours
+
+let attackMemCache = null; // in-memory for fast repeat requests
+
+function readAttackFileCache() {
+  try {
+    const raw  = fs.readFileSync(ATTACK_CACHE_FILE, 'utf8');
+    const { fetchedAt, arcs } = JSON.parse(raw);
+    if (Date.now() - fetchedAt < ATTACK_TTL) return { fetchedAt, arcs };
+  } catch {}
+  return null;
+}
+
+function writeAttackFileCache(arcs) {
+  try {
+    fs.writeFileSync(ATTACK_CACHE_FILE, JSON.stringify({ fetchedAt: Date.now(), arcs }));
+  } catch (e) {
+    console.error('Failed to write attack cache:', e.message);
+  }
+}
 
 async function fetchLiveAttacks() {
-  if (Date.now() - attackFetchedAt < ATTACK_TTL && attackCache.length > 0) {
-    return attackCache;
+  // 1. Check in-memory cache first (avoids even disk reads on repeated requests)
+  if (attackMemCache && Date.now() - attackMemCache.fetchedAt < ATTACK_TTL) {
+    return attackMemCache.arcs;
   }
 
+  // 2. Check disk cache
+  const fileCached = readAttackFileCache();
+  if (fileCached) {
+    attackMemCache = fileCached;
+    return fileCached.arcs;
+  }
+
+  // 3. Fetch fresh from AbuseIPDB
   const res = await fetch('https://api.abuseipdb.com/api/v2/blacklist?confidenceMinimum=90&limit=100', {
     headers: { Key: process.env.ABUSEIPDB_KEY, Accept: 'application/json' }
   });
-
   if (!res.ok) throw new Error(`AbuseIPDB ${res.status}`);
 
   const { data } = await res.json();
-
   const arcs = data
     .filter(ip => ip.countryCode && COUNTRY_COORDS[ip.countryCode])
     .slice(0, 40)
     .map(ip => {
-      const src    = COUNTRY_COORDS[ip.countryCode];
+      const src     = COUNTRY_COORDS[ip.countryCode];
       const dstCode = TARGETS.find(t => t !== ip.countryCode) ||
                       TARGETS[Math.floor(Math.random() * TARGETS.length)];
-      const dst    = COUNTRY_COORDS[dstCode];
-      const score  = ip.abuseConfidenceScore;
-      const severity = score >= 95 ? 'critical' : score >= 85 ? 'warning' : 'info';
+      const score   = ip.abuseConfidenceScore;
       return {
         srcLat: src.lat, srcLng: src.lng, srcName: src.name,
-        dstLat: dst.lat, dstLng: dst.lng, dstName: COUNTRY_COORDS[dstCode].name,
-        severity,
+        dstLat: COUNTRY_COORDS[dstCode].lat, dstLng: COUNTRY_COORDS[dstCode].lng,
+        dstName: COUNTRY_COORDS[dstCode].name,
+        severity: score >= 95 ? 'critical' : score >= 85 ? 'warning' : 'info',
         score,
         ip: ip.ipAddress,
         reports: ip.totalReports,
       };
     });
 
-  attackCache     = arcs.length > 0 ? arcs : attackCache;
-  attackFetchedAt = Date.now();
-  return attackCache;
+  if (arcs.length > 0) {
+    writeAttackFileCache(arcs);
+    attackMemCache = { fetchedAt: Date.now(), arcs };
+  }
+
+  return arcs.length > 0 ? arcs : (attackMemCache?.arcs ?? []);
 }
 
 // ── RSS news ──
