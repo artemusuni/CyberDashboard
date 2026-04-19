@@ -181,3 +181,30 @@ async function refreshChart() {
 
 refreshChart();
 setInterval(refreshChart, 30000);
+
+// ── Top Attackers Leaderboard ──
+async function refreshLeaders() {
+  const list = document.getElementById('leadersList');
+  if (!list) return;
+  try {
+    const res = await fetch('/api/top-countries');
+    const rows = await res.json();
+    if (!rows.length) { list.innerHTML = '<li class="leaders-loading">NO DATA YET</li>'; return; }
+    const max = rows[0].count;
+    list.innerHTML = rows.map((r, i) => `
+      <li class="leaders-item">
+        <span class="leaders-rank">${String(i + 1).padStart(2, '0')}</span>
+        <span class="leaders-country">${r.country || 'UNKNOWN'}</span>
+        <div class="leaders-bar-wrap">
+          <div class="leaders-bar" style="width:${Math.round((r.count / max) * 100)}%"></div>
+        </div>
+        <span class="leaders-count">${r.count}</span>
+      </li>
+    `).join('');
+  } catch {
+    if (list) list.innerHTML = '<li class="leaders-loading">OFFLINE</li>';
+  }
+}
+
+refreshLeaders();
+setInterval(refreshLeaders, 60000);
