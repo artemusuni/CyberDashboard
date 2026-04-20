@@ -208,3 +208,14 @@ async function refreshLeaders() {
 
 refreshLeaders();
 setInterval(refreshLeaders, 60000);
+
+// ── Keyboard shortcuts ──
+const KEY_MAP = { d: 'dashboard', t: 'threatmap', a: 'analytics', i: 'iplookup', s: 'settings' };
+window.addEventListener('keydown', e => {
+  if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.metaKey || e.ctrlKey || e.altKey) return;
+  const page = KEY_MAP[e.key.toLowerCase()];
+  if (!page) return;
+  // Click the matching nav item so router.js handles navigation
+  const navItem = document.querySelector(`.nav-item[data-page="${page}"]`);
+  if (navItem) { window.Sounds?.click(); navItem.click(); }
+});

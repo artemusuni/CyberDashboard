@@ -4,7 +4,7 @@ const path    = require('path');
 const fs      = require('fs');
 const fetch   = require('node-fetch');
 const Parser  = require('rss-parser');
-const { saveAttacks, getDailyStats, getWeeklyStats, getMonthlyStats, getTopCountries, getCachedIp, setCachedIp } = require('./db');
+const { saveAttacks, getDailyStats, getWeeklyStats, getMonthlyStats, getTopCountries, getCachedIp, setCachedIp, getCachedCve, setCachedCve } = require('./db');
 
 const app    = express();
 const PORT   = process.env.PORT || 3000;
@@ -238,6 +238,59 @@ app.get('/api/history/:range', (req, res) => {
 app.get('/api/top-countries', (req, res) => {
   try {
     res.json(getTopCountries(10));
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// ── CVE lookup (NVD API v2, no key required) ──
+const NVD_BASE = 'https://services.nvd.nist.gov/rest/json/cves/2.0';
+
+function parseCve(raw) {
+  const cve     = raw.cve;
+  const desc    = (cve.descriptions ?? []).find(d => d.lang === 'en')?.value ?? '';
+  const metrics = cve.metrics ?? {};
+  const cvss    = metrics.cvssMetricV31?.[0] ?? metrics.cvssMetricV30?.[0] ?? metrics.cvssMetricV2?.[0] ?? null;
+  const score   = cvss?.cvssData?.baseScore ?? null;
+  const severity= cvss?.cvssData?.baseSeverity ?? (score >= 9 ? 'CRITICAL' : score >= 7 ? 'HIGH' : score >= 4 ? 'MEDIUM' : 'LOW');
+  const vector  = cvss?.cvssData?.vectorString ?? null;
+  const cwes    = (cve.weaknesses ?? []).flatMap(w => w.description.map(d => d.value)).filter(v => v !== 'NVD-CWE-Other');
+  const refs    = (cve.references ?? []).slice(0, 5).map(r => ({ url: r.url, tags: r.tags ?? [] }));
+  return { id: cve.id, description: desc, score, severity, vector, cwes, refs, published: cve.published, lastModified: cve.lastModified };
+}
+
+app.get('/api/cve/search', async (req, res) => {
+  const q = (req.query.q || '').trim().slice(0, 100);
+  if (!q) return res.status(400).json({ error: 'Missing query' });
+  try {
+    const isCveId = /^CVE-\d{4}-\d+$/i.test(q);
+    const url = isCveId
+      ? `${NVD_BASE}?cveId=${encodeURIComponent(q.toUpperCase())}`
+      : `${NVD_BASE}?keywordSearch=${encodeURIComponent(q)}&resultsPerPage=10`;
+    const r = await fetch(url, { headers: { 'User-Agent': 'CyberDashboard/1.0' } });
+    if (!r.ok) throw new Error(`NVD API ${r.status}`);
+    const { vulnerabilities = [] } = await r.json();
+    res.json(vulnerabilities.map(parseCve));
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+app.get('/api/cve/:id', async (req, res) => {
+  const id = req.params.id.toUpperCase();
+  if (!/^CVE-\d{4}-\d+$/.test(id)) return res.status(400).json({ error: 'Invalid CVE ID' });
+
+  const cached = getCachedCve(id);
+  if (cached) return res.json(cached);
+
+  try {
+    const r = await fetch(`${NVD_BASE}?cveId=${encodeURIComponent(id)}`, { headers: { 'User-Agent': 'CyberDashboard/1.0' } });
+    if (!r.ok) throw new Error(`NVD API ${r.status}`);
+    const { vulnerabilities = [] } = await r.json();
+    if (!vulnerabilities.length) return res.status(404).json({ error: 'CVE not found' });
+    const parsed = parseCve(vulnerabilities[0]);
+    setCachedCve(id, parsed);
+    res.json(parsed);
   } catch (e) {
     res.status(500).json({ error: e.message });
   }

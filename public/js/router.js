@@ -61,13 +61,8 @@ toggle.addEventListener('click', () => {
   window.dispatchEvent(new Event('resize'));
 });
 
-// Keyboard shortcuts: D/T/A/I/S navigate to pages
-const KEY_MAP = { d: 'dashboard', t: 'threatmap', a: 'analytics', i: 'iplookup', s: 'settings' };
-document.addEventListener('keydown', e => {
-  if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.metaKey || e.ctrlKey || e.altKey) return;
-  const page = KEY_MAP[e.key.toLowerCase()];
-  if (page) { window.Sounds?.click(); navigate(page); }
-});
+// Expose navigate globally so non-module scripts can call it
+window._navigate = navigate;
 
 // Hash-based routing on load
 const hash = window.location.hash.replace('#', '') || 'dashboard';

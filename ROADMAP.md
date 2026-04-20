@@ -95,7 +95,7 @@
 | ⬜ | Skeleton loading screens on all pages |
 | ✅ | Top attackers leaderboard on dashboard |
 | ⬜ | Export attack history as CSV from Analytics |
-| ⬜ | CVE lookup on IP Lookup page |
+| ✅ | CVE lookup on IP Lookup page (tab + NVD API, cached in SQLite) |
 | ⬜ | Full mobile responsiveness on all new pages |
 
 ---

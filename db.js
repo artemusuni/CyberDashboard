@@ -23,6 +23,12 @@ db.exec(`
     data        TEXT NOT NULL,
     cached_at   INTEGER NOT NULL
   );
+
+  CREATE TABLE IF NOT EXISTS cve_cache (
+    cve_id      TEXT PRIMARY KEY,
+    data        TEXT NOT NULL,
+    cached_at   INTEGER NOT NULL
+  );
 `);
 
 const insertAttack = db.prepare(`
@@ -113,4 +119,18 @@ function setCachedIp(ip, data) {
   `).run(ip, JSON.stringify(data), Date.now());
 }
 
-module.exports = { saveAttacks, getDailyStats, getWeeklyStats, getMonthlyStats, getTopCountries, getCachedIp, setCachedIp };
+function getCachedCve(cveId) {
+  const TTL = 6 * 60 * 60 * 1000; // 6 hours
+  const row = db.prepare('SELECT data, cached_at FROM cve_cache WHERE cve_id = ?').get(cveId);
+  if (row && Date.now() - row.cached_at < TTL) return JSON.parse(row.data);
+  return null;
+}
+
+function setCachedCve(cveId, data) {
+  db.prepare(`
+    INSERT INTO cve_cache (cve_id, data, cached_at) VALUES (?, ?, ?)
+    ON CONFLICT(cve_id) DO UPDATE SET data=excluded.data, cached_at=excluded.cached_at
+  `).run(cveId, JSON.stringify(data), Date.now());
+}
+
+module.exports = { saveAttacks, getDailyStats, getWeeklyStats, getMonthlyStats, getTopCountries, getCachedIp, setCachedIp, getCachedCve, setCachedCve };
