@@ -1,7 +1,10 @@
+import { errorScreen } from '../error.js';
+
 const SEVERITY_COLORS = { critical:'#ff2d55', warning:'#ffd700', info:'#00e5ff' };
 let globeInstance = null;
 
 export function mountThreatMap(container) {
+  try {
   container.innerHTML = `
     <div class="tm-shell">
       <div class="tm-controls panel">
@@ -106,6 +109,9 @@ export function mountThreatMap(container) {
   window.addEventListener('resize', window._tmResize);
 
   loadArcs();
+  } catch (e) {
+    errorScreen(container, e.message, () => mountThreatMap(container));
+  }
 }
 
 export function unmountThreatMap() {

@@ -1,3 +1,5 @@
+import { errorScreen } from '../error.js';
+
 const ABUSE_CATEGORIES = {
   1:'DNS Compromise', 2:'DNS Poisoning', 3:'Fraud Orders', 4:'DDoS Attack',
   5:'FTP Brute-Force', 6:'Ping of Death', 7:'Phishing', 8:'Fraud VoIP',
@@ -21,6 +23,7 @@ function cveSeverityClass(sev) {
 }
 
 export function mountIpLookup(container) {
+  try {
   container.innerHTML = `
     <div class="lookup-shell">
       <div class="lookup-header">
@@ -229,8 +232,11 @@ export function mountIpLookup(container) {
     }).join('');
   }
 
-  cveBtn.addEventListener('click', doCveSearch);
-  cveInput.addEventListener('keydown', e => { if (e.key === 'Enter') doCveSearch(); });
+  btn.addEventListener('click', doLookup);
+  input.addEventListener('keydown', e => { if (e.key === 'Enter') doLookup(); });
+  } catch (e) {
+    errorScreen(container, e.message, () => mountIpLookup(container));
+  }
 }
 
 export function unmountIpLookup() {}
