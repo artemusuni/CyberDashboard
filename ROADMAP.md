@@ -92,7 +92,7 @@
 | ⬜ 🔥 | Landing/about page explaining the project with live demo link |
 | ⬜ | Light/dark theme toggle |
 | ✅ | Keyboard shortcuts (D/T/A/I/S navigate between pages) |
-| ⬜ | Skeleton loading screens on all pages |
+| ✅ | Skeleton loading screens on all pages |
 | ✅ | Top attackers leaderboard on dashboard |
 | ✅ | Export attack history as CSV from Analytics (7D, 30D, countries) |
 | ✅ | CVE lookup on IP Lookup page (tab + NVD API, cached in SQLite) |
