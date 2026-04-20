@@ -1076,8 +1076,10 @@ body::after {
 
 .analytics-header {
   display: flex;
-  flex-direction: column;
-  gap: 4px;
+  align-items: flex-start;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
   flex-shrink: 0;
 }
 
@@ -1089,6 +1091,32 @@ body::after {
 }
 
 .analytics-panel { display: flex; flex-direction: column; }
+
+.analytics-export-group {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.export-btn {
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 2px;
+  color: var(--text-dim);
+  font-family: var(--font);
+  font-size: 10px;
+  letter-spacing: 1px;
+  padding: 4px 10px;
+  cursor: pointer;
+  transition: border-color 0.2s, color 0.2s, box-shadow 0.2s;
+  white-space: nowrap;
+}
+.export-btn:hover {
+  border-color: var(--green);
+  color: var(--green);
+  box-shadow: var(--glow-g);
+}
 
 .analytics-chart-wrap {
   flex: 1;

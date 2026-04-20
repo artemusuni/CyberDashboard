@@ -46,8 +46,15 @@ export async function mountAnalytics(container) {
   container.innerHTML = `
     <div class="analytics-shell">
       <div class="analytics-header">
-        <span class="page-title">[ ANALYTICS ]</span>
-        <span class="page-sub">Historical attack intelligence</span>
+        <div>
+          <span class="page-title">[ ANALYTICS ]</span>
+          <span class="page-sub">Historical attack intelligence</span>
+        </div>
+        <div class="analytics-export-group">
+          <button class="export-btn" id="exportWeek">&#8595; 7D CSV</button>
+          <button class="export-btn" id="exportMonth">&#8595; 30D CSV</button>
+          <button class="export-btn" id="exportCountries">&#8595; COUNTRIES CSV</button>
+        </div>
       </div>
       <div class="analytics-grid">
 
@@ -158,6 +165,27 @@ export async function mountAnalytics(container) {
         }
       }
     }));
+
+    // ── CSV Export ──
+    function downloadCsv(filename, headers, rows) {
+      const csv = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
+      const a = Object.assign(document.createElement('a'), {
+        href: 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv),
+        download: filename,
+      });
+      a.click();
+      window.Sounds?.click();
+    }
+
+    container.querySelector('#exportWeek').addEventListener('click', () =>
+      downloadCsv('attacks_7d.csv', ['date','count'], week.map(r => [r.day || r.hour, r.count]))
+    );
+    container.querySelector('#exportMonth').addEventListener('click', () =>
+      downloadCsv('attacks_30d.csv', ['date','count'], month.map(r => [r.day || r.hour, r.count]))
+    );
+    container.querySelector('#exportCountries').addEventListener('click', () =>
+      downloadCsv('top_countries.csv', ['country','count'], countries.map(c => [JSON.stringify(c.country), c.count]))
+    );
 
   } catch (e) {
     container.querySelector('.analytics-grid').innerHTML =
