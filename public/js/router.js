@@ -61,6 +61,9 @@ toggle.addEventListener('click', () => {
   window.dispatchEvent(new Event('resize'));
 });
 
+// Expose navigate globally so non-module scripts can call it
+window._navigate = navigate;
+
 // Hash-based routing on load
 const hash = window.location.hash.replace('#', '') || 'dashboard';
 navigate(hash);

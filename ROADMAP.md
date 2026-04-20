@@ -91,11 +91,11 @@
 |--------|---------|
 | ⬜ 🔥 | Landing/about page explaining the project with live demo link |
 | ⬜ | Light/dark theme toggle |
-| ⬜ | Keyboard shortcuts (G = globe, A = analytics, I = IP lookup, etc.) |
+| ✅ | Keyboard shortcuts (D/T/A/I/S navigate between pages) |
 | ⬜ | Skeleton loading screens on all pages |
-| ⬜ | Top attackers leaderboard on dashboard |
+| ✅ | Top attackers leaderboard on dashboard |
 | ⬜ | Export attack history as CSV from Analytics |
-| ⬜ | CVE lookup on IP Lookup page |
+| ✅ | CVE lookup on IP Lookup page (tab + NVD API, cached in SQLite) |
 | ⬜ | Full mobile responsiveness on all new pages |
 
 ---
