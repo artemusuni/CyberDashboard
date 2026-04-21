@@ -1,0 +1,738 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CyberDashboard — Live Threat Intelligence</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:       #0a0a0f;
+      --bg-panel: #0d0d14;
+      --bg-card:  #111120;
+      --cyan:     #00e5ff;
+      --green:    #00ff88;
+      --red:      #ff2d55;
+      --yellow:   #ffd700;
+      --border:   #1e1e3a;
+      --text:     #c0c0d0;
+      --text-dim: #555570;
+      --font:     'Share Tech Mono', monospace;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font);
+      font-size: 13px;
+      line-height: 1.6;
+      overflow-x: hidden;
+    }
+
+    /* Scanlines */
+    body::after {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background: repeating-linear-gradient(
+        to bottom,
+        transparent 0px, transparent 2px,
+        rgba(0,0,0,0.07) 2px, rgba(0,0,0,0.07) 4px
+      );
+      pointer-events: none;
+      z-index: 9999;
+    }
+
+    a { color: var(--cyan); text-decoration: none; }
+    a:hover { text-shadow: 0 0 8px #00e5ff88; }
+
+    /* ── NAV ── */
+    nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 32px;
+      height: 52px;
+      background: rgba(10,10,15,0.95);
+      border-bottom: 1px solid var(--border);
+      backdrop-filter: blur(8px);
+    }
+
+    .nav-logo {
+      font-size: 15px;
+      letter-spacing: 3px;
+      color: var(--text);
+    }
+    .nav-logo span { color: var(--cyan); text-shadow: 0 0 8px #00e5ff88; }
+
+    .nav-links { display: flex; gap: 24px; align-items: center; }
+
+    .nav-links a {
+      font-size: 11px;
+      letter-spacing: 2px;
+      color: var(--text-dim);
+      transition: color 0.2s;
+    }
+    .nav-links a:hover { color: var(--cyan); }
+
+    .btn {
+      display: inline-block;
+      font-family: var(--font);
+      font-size: 11px;
+      letter-spacing: 2px;
+      padding: 8px 20px;
+      border-radius: 2px;
+      border: 1px solid;
+      cursor: pointer;
+      transition: box-shadow 0.2s, background 0.2s;
+      text-decoration: none;
+    }
+
+    .btn-primary {
+      background: rgba(0,229,255,0.08);
+      border-color: var(--cyan);
+      color: var(--cyan);
+    }
+    .btn-primary:hover {
+      background: rgba(0,229,255,0.15);
+      box-shadow: 0 0 16px rgba(0,229,255,0.3);
+      text-shadow: none;
+    }
+
+    .btn-outline {
+      background: transparent;
+      border-color: var(--border);
+      color: var(--text-dim);
+    }
+    .btn-outline:hover {
+      border-color: var(--text-dim);
+      color: var(--text);
+      text-shadow: none;
+    }
+
+    .btn-lg {
+      font-size: 13px;
+      padding: 12px 32px;
+      letter-spacing: 3px;
+    }
+
+    /* ── HERO ── */
+    .hero {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 100px 24px 60px;
+      position: relative;
+    }
+
+    /* Grid background */
+    .hero::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(0,229,255,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0,229,255,0.03) 1px, transparent 1px);
+      background-size: 48px 48px;
+      pointer-events: none;
+    }
+
+    /* Radial glow */
+    .hero::after {
+      content: '';
+      position: absolute;
+      top: 30%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 600px;
+      height: 600px;
+      background: radial-gradient(circle, rgba(0,229,255,0.04) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .hero-eyebrow {
+      font-size: 11px;
+      letter-spacing: 4px;
+      color: var(--green);
+      text-shadow: 0 0 8px #00ff8888;
+      margin-bottom: 20px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .hero-title {
+      font-size: clamp(32px, 7vw, 64px);
+      letter-spacing: 6px;
+      color: var(--text);
+      line-height: 1.1;
+      margin-bottom: 8px;
+      position: relative;
+      z-index: 1;
+    }
+    .hero-title span { color: var(--cyan); text-shadow: 0 0 20px rgba(0,229,255,0.4); }
+
+    .hero-sub {
+      font-size: clamp(12px, 2vw, 15px);
+      color: var(--text-dim);
+      letter-spacing: 2px;
+      margin-bottom: 40px;
+      max-width: 540px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .hero-cta {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      justify-content: center;
+      position: relative;
+      z-index: 1;
+      margin-bottom: 60px;
+    }
+
+    /* Live stats bar */
+    .hero-stats {
+      display: flex;
+      gap: 40px;
+      flex-wrap: wrap;
+      justify-content: center;
+      position: relative;
+      z-index: 1;
+      padding: 20px 32px;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      background: rgba(13,13,20,0.8);
+    }
+
+    .hero-stat { text-align: center; }
+    .hero-stat-val {
+      font-size: 24px;
+      color: var(--cyan);
+      text-shadow: 0 0 12px rgba(0,229,255,0.4);
+      display: block;
+    }
+    .hero-stat-label {
+      font-size: 10px;
+      letter-spacing: 2px;
+      color: var(--text-dim);
+    }
+
+    .live-dot {
+      display: inline-block;
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      background: var(--green);
+      box-shadow: 0 0 8px #00ff8888;
+      animation: pulse 1.5s infinite;
+      margin-right: 6px;
+      vertical-align: middle;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50%       { opacity: 0.5; transform: scale(0.8); }
+    }
+
+    /* ── FEATURES ── */
+    .section {
+      padding: 80px 24px;
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+
+    .section-title {
+      font-size: 11px;
+      letter-spacing: 4px;
+      color: var(--cyan);
+      text-shadow: 0 0 8px #00e5ff44;
+      margin-bottom: 8px;
+    }
+
+    .section-heading {
+      font-size: clamp(18px, 3vw, 26px);
+      letter-spacing: 3px;
+      color: var(--text);
+      margin-bottom: 40px;
+    }
+
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 16px;
+    }
+
+    .feature-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 24px;
+      transition: border-color 0.3s, box-shadow 0.3s;
+    }
+    .feature-card:hover {
+      border-color: rgba(0,229,255,0.25);
+      box-shadow: 0 0 20px rgba(0,229,255,0.05);
+    }
+
+    .feature-icon {
+      font-size: 22px;
+      margin-bottom: 12px;
+      display: block;
+    }
+
+    .feature-title {
+      font-size: 12px;
+      letter-spacing: 2px;
+      color: var(--cyan);
+      margin-bottom: 8px;
+    }
+
+    .feature-desc {
+      font-size: 11px;
+      color: var(--text-dim);
+      line-height: 1.7;
+    }
+
+    /* ── PREVIEW MOCKUP ── */
+    .preview-section {
+      padding: 60px 24px 80px;
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+
+    .mockup {
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      overflow: hidden;
+      background: var(--bg-panel);
+      box-shadow: 0 0 60px rgba(0,229,255,0.06);
+    }
+
+    .mockup-topbar {
+      background: var(--bg-card);
+      border-bottom: 1px solid var(--border);
+      padding: 10px 16px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .mockup-dot { width: 10px; height: 10px; border-radius: 50%; }
+    .mockup-dot.r { background: var(--red); box-shadow: 0 0 6px rgba(255,45,85,0.5); }
+    .mockup-dot.y { background: var(--yellow); box-shadow: 0 0 6px rgba(255,215,0,0.5); }
+    .mockup-dot.g { background: var(--green); box-shadow: 0 0 6px rgba(0,255,136,0.5); }
+
+    .mockup-title {
+      font-size: 11px;
+      letter-spacing: 3px;
+      color: var(--text-dim);
+      flex: 1;
+      text-align: center;
+    }
+
+    .mockup-body {
+      display: grid;
+      grid-template-columns: 180px 1fr 220px;
+      grid-template-rows: 200px;
+      gap: 8px;
+      padding: 8px;
+    }
+
+    .mockup-panel {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 3px;
+      padding: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .mockup-panel-title {
+      font-size: 9px;
+      letter-spacing: 2px;
+      color: var(--cyan);
+      text-shadow: 0 0 6px #00e5ff44;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 6px;
+    }
+
+    .mockup-news-item {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+      padding: 4px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.03);
+    }
+
+    .mockup-tag {
+      font-size: 8px;
+      padding: 1px 5px;
+      border-radius: 1px;
+      display: inline-block;
+      width: fit-content;
+      letter-spacing: 1px;
+    }
+    .mockup-tag.c { background: rgba(255,45,85,0.15); color: var(--red); border: 1px solid var(--red); }
+    .mockup-tag.w { background: rgba(255,215,0,0.1); color: var(--yellow); border: 1px solid var(--yellow); }
+    .mockup-tag.i { background: rgba(0,229,255,0.08); color: var(--cyan); border: 1px solid var(--cyan); }
+
+    .mockup-line { height: 6px; border-radius: 1px; background: var(--border); }
+    .mockup-line-short { width: 60%; }
+
+    /* Globe mockup */
+    .mockup-globe-area {
+      position: relative;
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .mockup-globe-circle {
+      width: 120px;
+      height: 120px;
+      border-radius: 50%;
+      border: 1px solid rgba(0,229,255,0.2);
+      background: radial-gradient(circle at 35% 35%, #1a1a2e, #0a0a0f);
+      box-shadow: 0 0 20px rgba(0,229,255,0.1), inset 0 0 20px rgba(0,229,255,0.05);
+      position: relative;
+    }
+
+    .mockup-arc {
+      position: absolute;
+      top: 50%; left: 50%;
+      width: 80px; height: 40px;
+      border-top: 1px solid;
+      border-radius: 50% 50% 0 0;
+      transform-origin: 0 0;
+    }
+    .mockup-arc.a1 { border-color: var(--red); transform: rotate(-20deg) translateX(-40px); opacity: 0.7; }
+    .mockup-arc.a2 { border-color: var(--cyan); transform: rotate(30deg) translateX(-50px); opacity: 0.5; width: 60px; }
+    .mockup-arc.a3 { border-color: var(--yellow); transform: rotate(-60deg) translateX(-30px); opacity: 0.6; width: 70px; }
+
+    /* Bar chart mockup */
+    .mockup-bars {
+      display: flex;
+      align-items: flex-end;
+      gap: 3px;
+      flex: 1;
+      padding-top: 4px;
+    }
+
+    .mockup-bar {
+      flex: 1;
+      border-radius: 1px 1px 0 0;
+      background: linear-gradient(to top, rgba(0,229,255,0.6), rgba(0,229,255,0.2));
+    }
+
+    /* ── TECH STACK ── */
+    .stack-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .stack-tag {
+      font-size: 11px;
+      letter-spacing: 1px;
+      padding: 6px 14px;
+      border: 1px solid var(--border);
+      border-radius: 2px;
+      color: var(--text-dim);
+      background: var(--bg-card);
+      transition: border-color 0.2s, color 0.2s;
+    }
+    .stack-tag:hover { border-color: var(--cyan); color: var(--cyan); }
+
+    /* ── DIVIDER ── */
+    .divider {
+      border: none;
+      border-top: 1px solid var(--border);
+      margin: 0;
+    }
+
+    /* ── FOOTER ── */
+    footer {
+      padding: 32px 24px;
+      text-align: center;
+      border-top: 1px solid var(--border);
+      color: var(--text-dim);
+      font-size: 11px;
+      letter-spacing: 1px;
+    }
+    footer a { color: var(--text-dim); margin: 0 12px; }
+    footer a:hover { color: var(--cyan); }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 700px) {
+      nav { padding: 0 16px; }
+      .nav-links .hide-mobile { display: none; }
+      .hero { padding: 80px 16px 48px; }
+      .hero-stats { gap: 24px; padding: 16px; }
+      .mockup-body { grid-template-columns: 1fr; grid-template-rows: auto auto auto; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- NAV -->
+  <nav>
+    <div class="nav-logo">&gt;&gt; CYBER<span>DASHBOARD</span></div>
+    <div class="nav-links">
+      <a href="#features" class="hide-mobile">FEATURES</a>
+      <a href="#stack" class="hide-mobile">STACK</a>
+      <a href="https://github.com/artemusuni/CyberDashboard" target="_blank" rel="noopener">GITHUB</a>
+      <a href="/" class="btn btn-primary">LAUNCH &rarr;</a>
+    </div>
+  </nav>
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="hero-eyebrow"><span class="live-dot"></span>LIVE THREAT INTELLIGENCE PLATFORM</div>
+    <h1 class="hero-title">&gt;&gt; CYBER<span>DASHBOARD</span></h1>
+    <p class="hero-sub">Real-time global attack visualization, CVE lookup, and threat intelligence — all in one dark hacker-style dashboard.</p>
+    <div class="hero-cta">
+      <a href="/" class="btn btn-primary btn-lg">LAUNCH DASHBOARD &rarr;</a>
+      <a href="https://github.com/artemusuni/CyberDashboard" target="_blank" rel="noopener" class="btn btn-outline btn-lg">VIEW ON GITHUB</a>
+    </div>
+    <div class="hero-stats" id="heroStats">
+      <div class="hero-stat">
+        <span class="hero-stat-val" id="statAttacks">—</span>
+        <span class="hero-stat-label">ATTACKS TODAY</span>
+      </div>
+      <div class="hero-stat">
+        <span class="hero-stat-val" id="statCountries">—</span>
+        <span class="hero-stat-label">ATTACKER COUNTRIES</span>
+      </div>
+      <div class="hero-stat">
+        <span class="hero-stat-val" id="statSources">3</span>
+        <span class="hero-stat-label">INTEL SOURCES</span>
+      </div>
+      <div class="hero-stat">
+        <span class="hero-stat-val" id="statUptime">—</span>
+        <span class="hero-stat-label">UPTIME</span>
+      </div>
+    </div>
+  </section>
+
+  <hr class="divider" />
+
+  <!-- PREVIEW MOCKUP -->
+  <div class="preview-section">
+    <div class="section-title">[ PREVIEW ]</div>
+    <div class="section-heading">WHAT YOU'RE GETTING</div>
+    <div class="mockup">
+      <div class="mockup-topbar">
+        <div class="mockup-dot r"></div>
+        <div class="mockup-dot y"></div>
+        <div class="mockup-dot g"></div>
+        <div class="mockup-title">&gt;&gt; CYBERDASHBOARD // LIVE FEED ACTIVE</div>
+      </div>
+      <div class="mockup-body">
+        <!-- News panel mockup -->
+        <div class="mockup-panel">
+          <div class="mockup-panel-title">[ THREAT INTELLIGENCE ]</div>
+          <div class="mockup-news-item">
+            <span class="mockup-tag c">CRITICAL</span>
+            <div class="mockup-line" style="width:90%"></div>
+            <div class="mockup-line mockup-line-short"></div>
+          </div>
+          <div class="mockup-news-item">
+            <span class="mockup-tag w">WARNING</span>
+            <div class="mockup-line" style="width:85%"></div>
+            <div class="mockup-line mockup-line-short"></div>
+          </div>
+          <div class="mockup-news-item">
+            <span class="mockup-tag i">INFO</span>
+            <div class="mockup-line" style="width:80%"></div>
+            <div class="mockup-line mockup-line-short"></div>
+          </div>
+        </div>
+        <!-- Chart panel mockup -->
+        <div class="mockup-panel">
+          <div class="mockup-panel-title">[ ATTACK FREQUENCY ]</div>
+          <div class="mockup-bars">
+            <div class="mockup-bar" style="height:40%"></div>
+            <div class="mockup-bar" style="height:65%"></div>
+            <div class="mockup-bar" style="height:55%"></div>
+            <div class="mockup-bar" style="height:80%"></div>
+            <div class="mockup-bar" style="height:70%"></div>
+            <div class="mockup-bar" style="height:90%"></div>
+            <div class="mockup-bar" style="height:75%"></div>
+            <div class="mockup-bar" style="height:60%"></div>
+            <div class="mockup-bar" style="height:85%"></div>
+            <div class="mockup-bar" style="height:50%"></div>
+            <div class="mockup-bar" style="height:70%"></div>
+            <div class="mockup-bar" style="height:45%"></div>
+          </div>
+        </div>
+        <!-- Globe panel mockup -->
+        <div class="mockup-panel">
+          <div class="mockup-panel-title">[ GLOBAL ATTACK MAP ]</div>
+          <div class="mockup-globe-area">
+            <div class="mockup-globe-circle">
+              <div class="mockup-arc a1"></div>
+              <div class="mockup-arc a2"></div>
+              <div class="mockup-arc a3"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <hr class="divider" />
+
+  <!-- FEATURES -->
+  <section class="section" id="features">
+    <div class="section-title">[ FEATURES ]</div>
+    <div class="section-heading">EVERYTHING IN ONE PLACE</div>
+    <div class="features-grid">
+      <div class="feature-card">
+        <span class="feature-icon">&#9685;</span>
+        <div class="feature-title">3D GLOBAL ATTACK MAP</div>
+        <div class="feature-desc">Interactive globe showing live attack arcs from source to destination countries. Color-coded by severity with real-time AbuseIPDB data.</div>
+      </div>
+      <div class="feature-card">
+        <span class="feature-icon">&#9906;</span>
+        <div class="feature-title">IP + CVE LOOKUP</div>
+        <div class="feature-desc">Instantly query any IP against AbuseIPDB for abuse history, ISP, and reports. Search CVEs by keyword or ID via the NVD API with CVSS scores.</div>
+      </div>
+      <div class="feature-card">
+        <span class="feature-icon">&#9636;</span>
+        <div class="feature-title">ANALYTICS &amp; HISTORY</div>
+        <div class="feature-desc">7-day and 30-day attack frequency charts, top attacker countries, and severity breakdowns. Export to CSV with one click.</div>
+      </div>
+      <div class="feature-card">
+        <span class="feature-icon">&#9643;</span>
+        <div class="feature-title">LIVE THREAT FEED</div>
+        <div class="feature-desc">Auto-classified news from The Hacker News, BleepingComputer, and CISA. Critical/warning/info tags updated every 5 minutes.</div>
+      </div>
+      <div class="feature-card">
+        <span class="feature-icon">&#9881;</span>
+        <div class="feature-title">PERSISTENT CACHING</div>
+        <div class="feature-desc">SQLite + file-based cache survives restarts. AbuseIPDB calls cached for 2 hours, IP reports for 1 hour, CVEs for 6 hours.</div>
+      </div>
+      <div class="feature-card">
+        <span class="feature-icon">&#9774;</span>
+        <div class="feature-title">DOCKER READY</div>
+        <div class="feature-desc">Single <code>docker compose up</code> to run anywhere. Alpine-based image, named volumes for cache persistence, env-based config.</div>
+      </div>
+    </div>
+  </section>
+
+  <hr class="divider" />
+
+  <!-- TECH STACK -->
+  <section class="section" id="stack">
+    <div class="section-title">[ TECH STACK ]</div>
+    <div class="section-heading">BUILT WITH</div>
+    <div class="stack-grid">
+      <span class="stack-tag">Node.js</span>
+      <span class="stack-tag">Express 5</span>
+      <span class="stack-tag">Globe.gl</span>
+      <span class="stack-tag">Three.js</span>
+      <span class="stack-tag">Chart.js</span>
+      <span class="stack-tag">SQLite (better-sqlite3)</span>
+      <span class="stack-tag">AbuseIPDB API</span>
+      <span class="stack-tag">NVD API</span>
+      <span class="stack-tag">Docker</span>
+      <span class="stack-tag">Vanilla JS (ES Modules)</span>
+      <span class="stack-tag">Share Tech Mono</span>
+      <span class="stack-tag">Web Audio API</span>
+    </div>
+  </section>
+
+  <hr class="divider" />
+
+  <!-- SETUP -->
+  <section class="section">
+    <div class="section-title">[ SETUP ]</div>
+    <div class="section-heading">GET RUNNING IN 2 MINUTES</div>
+    <div style="display:flex; flex-direction:column; gap:10px; max-width:600px;">
+      <div style="background:var(--bg-card); border:1px solid var(--border); border-radius:4px; padding:16px 20px;">
+        <div style="color:var(--text-dim); font-size:10px; letter-spacing:2px; margin-bottom:10px;">DOCKER (RECOMMENDED)</div>
+        <div style="color:var(--green); font-size:12px; line-height:2;">
+          <div><span style="color:var(--text-dim)">$</span> git clone https://github.com/artemusuni/CyberDashboard</div>
+          <div><span style="color:var(--text-dim)">$</span> cp .env.example .env <span style="color:var(--text-dim)"># add your AbuseIPDB key</span></div>
+          <div><span style="color:var(--text-dim)">$</span> docker compose up</div>
+        </div>
+      </div>
+      <div style="background:var(--bg-card); border:1px solid var(--border); border-radius:4px; padding:16px 20px;">
+        <div style="color:var(--text-dim); font-size:10px; letter-spacing:2px; margin-bottom:10px;">LOCAL</div>
+        <div style="color:var(--green); font-size:12px; line-height:2;">
+          <div><span style="color:var(--text-dim)">$</span> npm install</div>
+          <div><span style="color:var(--text-dim)">$</span> node server.js</div>
+        </div>
+      </div>
+      <p style="color:var(--text-dim); font-size:11px; line-height:1.8;">
+        Requires a free <a href="https://www.abuseipdb.com/register" target="_blank">AbuseIPDB API key</a>.
+        The setup wizard guides you through configuration on first run.
+      </p>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer>
+    <div style="margin-bottom:12px;">
+      <a href="/">DASHBOARD</a>
+      <a href="https://github.com/artemusuni/CyberDashboard" target="_blank">GITHUB</a>
+      <a href="https://www.abuseipdb.com" target="_blank">ABUSEIPDB</a>
+    </div>
+    <div>&copy; 2026 CYBERDASHBOARD // MIT LICENSE // BUILT WITH CLAUDE CODE</div>
+  </footer>
+
+  <script>
+    // Pull live stats from the API
+    async function loadStats() {
+      try {
+        const [attacksRes, countriesRes] = await Promise.all([
+          fetch('/api/attacks'),
+          fetch('/api/top-countries'),
+        ]);
+        const attacks   = await attacksRes.json();
+        const countries = await countriesRes.json();
+
+        animateVal('statAttacks',   attacks.total);
+        animateVal('statCountries', countries.length);
+
+        // Uptime
+        const healthRes = await fetch('/api/health');
+        if (healthRes.ok) {
+          const health = await healthRes.json();
+          const mins = Math.floor((health.uptime || 0) / 60);
+          document.getElementById('statUptime').textContent =
+            mins < 60 ? `${mins}m` : `${Math.floor(mins/60)}h ${mins%60}m`;
+        }
+      } catch {}
+    }
+
+    function animateVal(id, target) {
+      const el = document.getElementById(id);
+      if (!el || !target) return;
+      let cur = 0;
+      const step = Math.ceil(target / 40);
+      const t = setInterval(() => {
+        cur = Math.min(cur + step, target);
+        el.textContent = cur.toLocaleString();
+        if (cur >= target) clearInterval(t);
+      }, 30);
+    }
+
+    loadStats();
+  </script>
+
+</body>
+</html>

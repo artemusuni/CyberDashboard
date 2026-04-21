@@ -89,7 +89,7 @@
 
 | Status | Feature |
 |--------|---------|
-| ⬜ 🔥 | Landing/about page explaining the project with live demo link |
+| ✅ 🔥 | Landing/about page explaining the project with live demo link |
 | ⬜ | Light/dark theme toggle |
 | ✅ | Keyboard shortcuts (D/T/A/I/S navigate between pages) |
 | ✅ | Skeleton loading screens on all pages |

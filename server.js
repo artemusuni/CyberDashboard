@@ -341,6 +341,15 @@ app.get('/api/cve/:id', async (req, res) => {
   }
 });
 
+app.get('/api/health', (req, res) => {
+  res.json({
+    status: 'ok',
+    configured: isConfigured(),
+    uptime: Math.floor(process.uptime()),
+    version: '1.0.0',
+  });
+});
+
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
