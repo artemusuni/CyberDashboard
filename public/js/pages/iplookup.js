@@ -232,8 +232,8 @@ export function mountIpLookup(container) {
     }).join('');
   }
 
-  btn.addEventListener('click', doLookup);
-  input.addEventListener('keydown', e => { if (e.key === 'Enter') doLookup(); });
+  cveBtn.addEventListener('click', doCveSearch);
+  cveInput.addEventListener('keydown', e => { if (e.key === 'Enter') doCveSearch(); });
   } catch (e) {
     errorScreen(container, e.message, () => mountIpLookup(container));
   }
