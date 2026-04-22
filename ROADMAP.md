@@ -77,7 +77,7 @@
 | Status | Feature |
 |--------|---------|
 | ⬜ 🔥 | Monitor your own IPs — alert if they appear in attack feeds |
-| ⬜ 🔥 | Webhook alerts — Discord / Slack / email on critical attacks |
+| ✅ 🔥 | Webhook alerts — Discord / Slack on critical attacks |
 | ⬜ | Weekly auto-generated threat report (PDF or email) |
 | ⬜ | Custom watchlists — track specific countries, IPs, CVEs |
 | ⬜ | Alert rules — e.g. "notify if China attacks spike 50% in 1 hour" |

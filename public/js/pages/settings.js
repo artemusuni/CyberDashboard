@@ -88,6 +88,43 @@ export function mountSettings(container) {
           </div>
         </div>
 
+        <div class="panel settings-panel" id="webhookPanel">
+          <div class="panel-header"><span class="panel-title">[ WEBHOOK ALERTS ]</span></div>
+          <div class="settings-body">
+            <div class="setting-row">
+              <div class="setting-info">
+                <span class="setting-name">Alert Threshold</span>
+                <span class="setting-desc">Minimum severity level to trigger an alert.</span>
+              </div>
+              <select class="setting-select" id="webhookThreshold">
+                <option value="critical">CRITICAL ONLY</option>
+                <option value="warning">WARNING + CRITICAL</option>
+              </select>
+            </div>
+            <div class="setting-row setting-row-col">
+              <div class="setting-info">
+                <span class="setting-name">Discord Webhook URL</span>
+                <span class="setting-desc">Paste your Discord channel webhook URL.</span>
+              </div>
+              <input type="text" class="setting-input" id="discordUrl" placeholder="https://discord.com/api/webhooks/..." spellcheck="false" />
+            </div>
+            <div class="setting-row setting-row-col">
+              <div class="setting-info">
+                <span class="setting-name">Slack Webhook URL</span>
+                <span class="setting-desc">Paste your Slack incoming webhook URL.</span>
+              </div>
+              <input type="text" class="setting-input" id="slackUrl" placeholder="https://hooks.slack.com/services/..." spellcheck="false" />
+            </div>
+            <div class="setting-row">
+              <div id="webhookStatus" class="setting-desc"></div>
+              <div style="display:flex;gap:8px;">
+                <button class="setting-toggle" id="webhookSave">SAVE</button>
+                <button class="setting-toggle" id="webhookTest">TEST</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <div class="panel settings-panel">
           <div class="panel-header"><span class="panel-title">[ DATABASE ]</span></div>
           <div class="settings-body">
@@ -111,6 +148,51 @@ export function mountSettings(container) {
       </div>
     </div>
   `;
+
+  // ── Webhook panel ──
+  async function loadWebhooks() {
+    try {
+      const res = await fetch('/api/settings/webhooks');
+      const cfg = await res.json();
+      container.querySelector('#discordUrl').value   = cfg.discord   || '';
+      container.querySelector('#slackUrl').value     = cfg.slack     || '';
+      container.querySelector('#webhookThreshold').value = cfg.threshold || 'critical';
+    } catch {}
+  }
+
+  function setWebhookStatus(msg, ok) {
+    const el = container.querySelector('#webhookStatus');
+    el.textContent = msg;
+    el.style.color = ok ? 'var(--green)' : 'var(--red)';
+  }
+
+  container.querySelector('#webhookSave').addEventListener('click', async () => {
+    const discord   = container.querySelector('#discordUrl').value.trim();
+    const slack     = container.querySelector('#slackUrl').value.trim();
+    const threshold = container.querySelector('#webhookThreshold').value;
+    try {
+      const res = await fetch('/api/settings/webhooks', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ discord, slack, threshold }),
+      });
+      if (!res.ok) throw new Error((await res.json()).error);
+      setWebhookStatus('SAVED', true);
+      window.Sounds?.click();
+    } catch (e) { setWebhookStatus(`ERROR: ${e.message}`, false); }
+  });
+
+  container.querySelector('#webhookTest').addEventListener('click', async () => {
+    setWebhookStatus('SENDING TEST...', true);
+    try {
+      const res = await fetch('/api/settings/webhooks/test', { method: 'POST' });
+      if (!res.ok) throw new Error((await res.json()).error);
+      setWebhookStatus('TEST SENT — CHECK YOUR CHANNEL', true);
+      window.Sounds?.click();
+    } catch (e) { setWebhookStatus(`ERROR: ${e.message}`, false); }
+  });
+
+  loadWebhooks();
 
   // Sync sound toggle with actual state
   const soundBtn = container.querySelector('#settingSoundToggle');
