@@ -10,6 +10,71 @@ const app    = express();
 const PORT   = process.env.PORT || 3000;
 const parser = new Parser({ timeout: 8000 });
 
+// ── Webhook config ──
+const WEBHOOK_CONFIG_FILE = path.join(__dirname, 'cache', 'webhooks.json');
+
+function readWebhookConfig() {
+  try { return JSON.parse(fs.readFileSync(WEBHOOK_CONFIG_FILE, 'utf8')); } catch {}
+  return { discord: '', slack: '', threshold: 'critical' };
+}
+
+function writeWebhookConfig(cfg) {
+  fs.writeFileSync(WEBHOOK_CONFIG_FILE, JSON.stringify(cfg, null, 2));
+}
+
+async function sendWebhookAlert(attacks) {
+  const cfg = readWebhookConfig();
+  if (!attacks.length) return;
+
+  const top = attacks.slice(0, 5);
+  const text = `🚨 *${attacks.length} new critical attack(s) detected*\n` +
+    top.map(a => `• \`${a.ip}\` — ${a.srcName} → ${a.dstName} (score: ${a.score})`).join('\n');
+
+  if (cfg.discord) {
+    try {
+      await fetch(cfg.discord, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          embeds: [{
+            title: `🚨 ${attacks.length} Critical Attack(s) Detected`,
+            color: 0xff2d55,
+            fields: top.map(a => ({
+              name: a.ip,
+              value: `${a.srcName} → ${a.dstName} | Score: ${a.score}`,
+              inline: false,
+            })),
+            footer: { text: 'CyberDashboard • AbuseIPDB' },
+            timestamp: new Date().toISOString(),
+          }]
+        }),
+      });
+    } catch (e) { console.error('Discord webhook error:', e.message); }
+  }
+
+  if (cfg.slack) {
+    try {
+      await fetch(cfg.slack, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          text,
+          attachments: [{
+            color: '#ff2d55',
+            fields: top.map(a => ({
+              title: a.ip,
+              value: `${a.srcName} → ${a.dstName} | Score: ${a.score}`,
+              short: false,
+            })),
+            footer: 'CyberDashboard',
+            ts: Math.floor(Date.now() / 1000),
+          }],
+        }),
+      });
+    } catch (e) { console.error('Slack webhook error:', e.message); }
+  }
+}
+
 // ── First-run check ──
 function isConfigured() {
   return !!(process.env.ABUSEIPDB_KEY && process.env.ABUSEIPDB_KEY !== 'your_api_key_here');
@@ -44,6 +109,7 @@ const ATTACK_CACHE_FILE = path.join(__dirname, 'cache', 'attacks.json');
 const ATTACK_TTL        = 2 * 60 * 60 * 1000; // 2 hours
 
 let attackMemCache = null; // in-memory for fast repeat requests
+let knownCriticalIps = new Set(); // track seen critical IPs to avoid duplicate alerts
 
 function readAttackFileCache() {
   try {
@@ -105,6 +171,19 @@ async function fetchLiveAttacks() {
     writeAttackFileCache(arcs);
     attackMemCache = { fetchedAt: Date.now(), arcs };
     saveAttacks(arcs);
+
+    // Fire webhook alerts for new critical IPs
+    const cfg = readWebhookConfig();
+    const threshold = cfg.threshold || 'critical';
+    const alertArcs = arcs.filter(a => {
+      if (threshold === 'critical' && a.severity !== 'critical') return false;
+      if (threshold === 'warning'  && a.severity === 'info')     return false;
+      return !knownCriticalIps.has(a.ip);
+    });
+    alertArcs.forEach(a => knownCriticalIps.add(a.ip));
+    if (alertArcs.length > 0 && (cfg.discord || cfg.slack)) {
+      sendWebhookAlert(alertArcs).catch(() => {});
+    }
   }
 
   return arcs.length > 0 ? arcs : (attackMemCache?.arcs ?? []);
@@ -341,13 +420,26 @@ app.get('/api/cve/:id', async (req, res) => {
   }
 });
 
-app.get('/api/health', (req, res) => {
-  res.json({
-    status: 'ok',
-    configured: isConfigured(),
-    uptime: Math.floor(process.uptime()),
-    version: '1.0.0',
-  });
+// ── Webhook settings ──
+app.get('/api/settings/webhooks', (req, res) => {
+  const cfg = readWebhookConfig();
+  res.json({ discord: cfg.discord || '', slack: cfg.slack || '', threshold: cfg.threshold || 'critical' });
+});
+
+app.post('/api/settings/webhooks', (req, res) => {
+  const { discord = '', slack = '', threshold = 'critical' } = req.body;
+  if (!['critical', 'warning'].includes(threshold)) return res.status(400).json({ error: 'Invalid threshold' });
+  writeWebhookConfig({ discord: discord.trim(), slack: slack.trim(), threshold });
+  res.json({ ok: true });
+});
+
+app.post('/api/settings/webhooks/test', async (req, res) => {
+  const cfg = readWebhookConfig();
+  if (!cfg.discord && !cfg.slack) return res.status(400).json({ error: 'No webhooks configured' });
+  try {
+    await sendWebhookAlert([{ ip: '1.2.3.4', srcName: 'Test Country', dstName: 'United States', severity: 'critical', score: 100 }]);
+    res.json({ ok: true });
+  } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
 app.get('/', (req, res) => {
