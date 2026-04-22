@@ -125,6 +125,26 @@ export function mountSettings(container) {
           </div>
         </div>
 
+        <div class="panel settings-panel" id="watchlistPanel">
+          <div class="panel-header"><span class="panel-title">[ IP WATCHLIST ]</span></div>
+          <div class="settings-body">
+            <div class="setting-row">
+              <div class="setting-info">
+                <span class="setting-name">Monitor IPs</span>
+                <span class="setting-desc">Get alerted when these IPs appear in the live attack feed.</span>
+              </div>
+            </div>
+            <div class="setting-row setting-row-col">
+              <div style="display:flex;gap:8px;width:100%;">
+                <input type="text" class="setting-input" id="watchlistInput" placeholder="e.g. 192.168.1.1" spellcheck="false" style="flex:1;" />
+                <button class="setting-toggle" id="watchlistAdd">ADD</button>
+              </div>
+            </div>
+            <div id="watchlistItems" class="watchlist-items"></div>
+            <div id="watchlistStatus" class="setting-desc" style="margin-top:6px;"></div>
+          </div>
+        </div>
+
         <div class="panel settings-panel">
           <div class="panel-header"><span class="panel-title">[ DATABASE ]</span></div>
           <div class="settings-body">
@@ -209,4 +229,66 @@ export function mountSettings(container) {
     document.getElementById('soundToggle')?.click();
     setTimeout(syncSound, 50);
   });
+
+  // ── Watchlist panel ──
+  function setWatchlistStatus(msg, ok) {
+    const el = container.querySelector('#watchlistStatus');
+    el.textContent = msg;
+    el.style.color = ok ? 'var(--green)' : 'var(--red)';
+  }
+
+  function renderWatchlist(list) {
+    const el = container.querySelector('#watchlistItems');
+    if (!list.length) {
+      el.innerHTML = '<div class="watchlist-empty">No IPs monitored</div>';
+      return;
+    }
+    el.innerHTML = list.map(ip => `
+      <div class="watchlist-item">
+        <span class="watchlist-ip">${ip}</span>
+        <button class="watchlist-remove" data-ip="${ip}">✕</button>
+      </div>
+    `).join('');
+    el.querySelectorAll('.watchlist-remove').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        try {
+          const res = await fetch(`/api/watchlist/${encodeURIComponent(btn.dataset.ip)}`, { method: 'DELETE' });
+          const data = await res.json();
+          renderWatchlist(data.list);
+          window.Sounds?.click();
+        } catch { setWatchlistStatus('ERROR removing IP', false); }
+      });
+    });
+  }
+
+  async function loadWatchlist() {
+    try {
+      const res = await fetch('/api/watchlist');
+      renderWatchlist(await res.json());
+    } catch { setWatchlistStatus('ERROR loading watchlist', false); }
+  }
+
+  container.querySelector('#watchlistAdd').addEventListener('click', async () => {
+    const ip = container.querySelector('#watchlistInput').value.trim();
+    if (!ip) return;
+    try {
+      const res = await fetch('/api/watchlist', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ip }),
+      });
+      if (!res.ok) throw new Error((await res.json()).error);
+      const data = await res.json();
+      renderWatchlist(data.list);
+      container.querySelector('#watchlistInput').value = '';
+      setWatchlistStatus(`${ip} added to watchlist`, true);
+      window.Sounds?.click();
+    } catch (e) { setWatchlistStatus(`ERROR: ${e.message}`, false); }
+  });
+
+  container.querySelector('#watchlistInput').addEventListener('keydown', e => {
+    if (e.key === 'Enter') container.querySelector('#watchlistAdd').click();
+  });
+
+  loadWatchlist();
 }
