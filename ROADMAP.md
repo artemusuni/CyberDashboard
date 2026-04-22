@@ -53,7 +53,7 @@
 | ✅ | `Dockerfile` + `docker-compose.yml` |
 | ✅ | Graceful error boundaries on all pages (no white screens) |
 | ⬜ | Health check endpoint `/api/health` |
-| ⬜ | README Docker setup instructions |
+| ✅ | README Docker setup instructions |
 
 ---
 
