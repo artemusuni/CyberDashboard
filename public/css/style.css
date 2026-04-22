@@ -1353,6 +1353,53 @@ body::after {
 .setting-select:focus { border-color: var(--cyan); }
 
 /* ════════════════════════════════
+   IP WATCHLIST
+════════════════════════════════ */
+.watchlist-items {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.watchlist-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: rgba(0,255,255,0.04);
+  border: 1px solid rgba(0,255,255,0.15);
+  border-radius: 4px;
+  padding: 6px 10px;
+}
+
+.watchlist-ip {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--cyan);
+  letter-spacing: 0.05em;
+}
+
+.watchlist-remove {
+  background: none;
+  border: 1px solid rgba(255,45,85,0.4);
+  color: var(--red);
+  cursor: pointer;
+  font-size: 11px;
+  padding: 2px 7px;
+  border-radius: 3px;
+  transition: background 0.15s;
+}
+.watchlist-remove:hover { background: rgba(255,45,85,0.15); }
+
+.watchlist-empty {
+  font-size: 11px;
+  color: var(--text-dim);
+  text-align: center;
+  padding: 10px 0;
+  font-style: italic;
+}
+
+/* ════════════════════════════════
    TOP ATTACKERS LEADERBOARD
 ════════════════════════════════ */
 .leaders-list {

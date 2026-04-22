@@ -10,6 +10,81 @@ const app    = express();
 const PORT   = process.env.PORT || 3000;
 const parser = new Parser({ timeout: 8000 });
 
+// ── IP Watchlist ──
+const WATCHLIST_FILE = path.join(__dirname, 'cache', 'watchlist.json');
+
+function readWatchlist() {
+  try { return JSON.parse(fs.readFileSync(WATCHLIST_FILE, 'utf8')); } catch {}
+  return [];
+}
+
+function writeWatchlist(list) {
+  fs.writeFileSync(WATCHLIST_FILE, JSON.stringify(list));
+}
+
+async function checkWatchlist(arcs) {
+  const watchlist = readWatchlist();
+  if (!watchlist.length) return;
+
+  const hits = arcs.filter(a => watchlist.includes(a.ip));
+  if (!hits.length) return;
+
+  const cfg = readWebhookConfig();
+  for (const hit of hits) {
+    console.warn(`[WATCHLIST] Monitored IP detected: ${hit.ip} (score: ${hit.score})`);
+    if (cfg.discord || cfg.slack) {
+      await sendWatchlistAlert(hit).catch(() => {});
+    }
+  }
+}
+
+async function sendWatchlistAlert(attack) {
+  const cfg = readWebhookConfig();
+  const text = `🚨 *MONITORED IP DETECTED IN ATTACK FEED*\n\`${attack.ip}\` — ${attack.srcName} → ${attack.dstName}\nAbuse Score: ${attack.score} | Severity: ${attack.severity.toUpperCase()}`;
+
+  if (cfg.discord) {
+    await fetch(cfg.discord, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        embeds: [{
+          title: '🚨 Monitored IP Detected',
+          description: `Your watched IP **\`${attack.ip}\`** has appeared in the attack feed.`,
+          color: 0xff2d55,
+          fields: [
+            { name: 'IP Address', value: attack.ip, inline: true },
+            { name: 'Origin',     value: attack.srcName, inline: true },
+            { name: 'Target',     value: attack.dstName, inline: true },
+            { name: 'Abuse Score', value: String(attack.score), inline: true },
+            { name: 'Severity',   value: attack.severity.toUpperCase(), inline: true },
+          ],
+          footer: { text: 'CyberDashboard IP Watchlist' },
+          timestamp: new Date().toISOString(),
+        }]
+      }),
+    });
+  }
+
+  if (cfg.slack) {
+    await fetch(cfg.slack, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        text,
+        attachments: [{
+          color: '#ff2d55',
+          fields: [
+            { title: 'IP',     value: attack.ip,       short: true },
+            { title: 'Origin', value: attack.srcName,  short: true },
+            { title: 'Score',  value: String(attack.score), short: true },
+          ],
+          footer: 'CyberDashboard IP Watchlist',
+        }],
+      }),
+    });
+  }
+}
+
 // ── Webhook config ──
 const WEBHOOK_CONFIG_FILE = path.join(__dirname, 'cache', 'webhooks.json');
 
@@ -171,6 +246,7 @@ async function fetchLiveAttacks() {
     writeAttackFileCache(arcs);
     attackMemCache = { fetchedAt: Date.now(), arcs };
     saveAttacks(arcs);
+    checkWatchlist(arcs).catch(() => {});
 
     // Fire webhook alerts for new critical IPs
     const cfg = readWebhookConfig();
@@ -440,6 +516,31 @@ app.post('/api/settings/webhooks/test', async (req, res) => {
     await sendWebhookAlert([{ ip: '1.2.3.4', srcName: 'Test Country', dstName: 'United States', severity: 'critical', score: 100 }]);
     res.json({ ok: true });
   } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// ── Watchlist routes ──
+app.get('/api/watchlist', (req, res) => {
+  res.json(readWatchlist());
+});
+
+app.post('/api/watchlist', (req, res) => {
+  const { ip } = req.body;
+  if (!ip || typeof ip !== 'string') return res.status(400).json({ error: 'ip required' });
+  const clean = ip.trim();
+  // Basic IP validation
+  if (!/^(\d{1,3}\.){3}\d{1,3}$/.test(clean)) return res.status(400).json({ error: 'invalid IP format' });
+  const list = readWatchlist();
+  if (list.includes(clean)) return res.json({ ok: true, list });
+  list.push(clean);
+  writeWatchlist(list);
+  res.json({ ok: true, list });
+});
+
+app.delete('/api/watchlist/:ip', (req, res) => {
+  const ip = decodeURIComponent(req.params.ip);
+  const list = readWatchlist().filter(x => x !== ip);
+  writeWatchlist(list);
+  res.json({ ok: true, list });
 });
 
 app.get('/', (req, res) => {
