@@ -981,6 +981,11 @@ body::after {
 @media (max-width: 860px) {
   html, body { overflow: auto; }
 
+  /* Sidebar collapses automatically */
+  .sidebar { width: 52px; }
+  .sidebar .nav-label { opacity: 0; pointer-events: none; }
+  .sidebar .nav-footer { opacity: 0; }
+
   .dashboard {
     grid-template-columns: 1fr;
     grid-template-rows: auto auto auto;
@@ -995,12 +1000,58 @@ body::after {
 
   .topbar-center { display: none; }
   .logo { font-size: 13px; }
+
+  /* ── Threat Map ── */
+  .tm-shell {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto 1fr;
+    height: auto;
+  }
+  .tm-controls { min-height: 0; }
+  .tm-filter-body { flex-direction: row; flex-wrap: wrap; gap: 10px; }
+  .tm-filter-group { flex: 1; min-width: 120px; }
+
+  /* ── Analytics ── */
+  .analytics-grid {
+    grid-template-columns: 1fr;
+    grid-template-rows: 260px 260px 260px 260px;
+  }
+  .analytics-header { flex-direction: column; align-items: flex-start; }
+  .analytics-export-group { flex-wrap: wrap; }
+
+  /* ── Settings ── */
+  .settings-grid { grid-template-columns: 1fr; }
+  .setting-row { flex-wrap: wrap; gap: 8px; }
+
+  /* ── IP Lookup ── */
+  .lookup-shell { padding: 12px; }
+  .ltab-group { flex-wrap: wrap; }
+  .cve-header-right { flex-wrap: wrap; }
+
+  /* ── News/CVE tabs ── */
+  .news-tabs { gap: 3px; }
+  .news-tab { padding: 2px 6px; }
+
+  /* ── Watchlist ── */
+  .watchlist-item { flex-wrap: wrap; gap: 6px; }
 }
 
 @media (max-width: 480px) {
   .topbar { padding: 0 10px; }
   .topbar-right #clock { display: none; }
   .dashboard { padding: 8px; gap: 8px; }
+
+  /* ── Analytics ── */
+  .analytics-shell { padding: 10px; gap: 10px; }
+  .analytics-grid { grid-template-rows: 220px 220px 220px 220px; gap: 8px; }
+
+  /* ── Settings ── */
+  .settings-shell { padding: 10px; gap: 10px; }
+  .setting-row { padding: 10px 12px; }
+  .setting-input { font-size: 11px; }
+
+  /* ── Threat Map ── */
+  .tm-shell { padding: 8px; gap: 8px; }
 }
 
 /* ════════════════════════════════
