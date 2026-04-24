@@ -7,8 +7,13 @@ function updateClock() {
 updateClock();
 setInterval(updateClock, 1000);
 
-// ── Live News Feed ──
-const feed = document.getElementById('newsFeed');
+// ── Live News Feed + CVE Feed ──
+const feed    = document.getElementById('newsFeed');
+const cveFeed = document.getElementById('cveFeed');
+const tabNews = document.getElementById('tabNews');
+const tabCve  = document.getElementById('tabCve');
+
+let cveLoaded = false;
 
 function renderNews(items) {
   const prev = feed.querySelectorAll('.news-item').length;
@@ -23,7 +28,6 @@ function renderNews(items) {
     </a>
   `).join('');
 
-  // Sound on new critical items appearing
   if (prev > 0 && items.some(i => i.severity === 'critical')) {
     window.Sounds?.alert();
   }
@@ -37,6 +41,66 @@ function showNewsError() {
       <span class="news-time">--</span>
     </div>`;
 }
+
+function severityClass(sev) {
+  const s = (sev || '').toUpperCase();
+  if (s === 'CRITICAL') return 'critical';
+  if (s === 'HIGH')     return 'warning';
+  if (s === 'MEDIUM')   return 'info';
+  return 'info';
+}
+
+function renderCves(items) {
+  if (!items.length) {
+    cveFeed.innerHTML = '<div class="news-item"><span class="news-tag info">EMPTY</span><p>No recent CVEs found.</p></div>';
+    return;
+  }
+  cveFeed.innerHTML = items.map(c => {
+    const sc    = severityClass(c.severity);
+    const score = c.score !== null ? c.score.toFixed(1) : 'N/A';
+    const desc  = c.description.length > 160 ? c.description.slice(0, 160) + '…' : c.description;
+    const date  = c.published ? new Date(c.published).toLocaleDateString('en-GB', { day:'2-digit', month:'short', year:'numeric' }) : '';
+    const nvdUrl = `https://nvd.nist.gov/vuln/detail/${c.id}`;
+    return `
+      <a class="news-item cve-news-item" href="${nvdUrl}" target="_blank" rel="noopener">
+        <div class="news-item-top">
+          <span class="news-tag ${sc}">${c.id}</span>
+          <span class="cve-score-badge ${sc}">CVSS ${score}</span>
+        </div>
+        <p>${desc}</p>
+        <span class="news-time">${date}</span>
+      </a>`;
+  }).join('');
+}
+
+async function refreshCves() {
+  try {
+    const res = await fetch('/api/cve/recent');
+    if (!res.ok) throw new Error('bad response');
+    const items = await res.json();
+    renderCves(items);
+    cveLoaded = true;
+  } catch {
+    cveFeed.innerHTML = '<div class="news-item"><span class="news-tag warning">OFFLINE</span><p>Unable to reach CVE feed.</p></div>';
+  }
+}
+
+tabNews.addEventListener('click', () => {
+  tabNews.classList.add('active');
+  tabCve.classList.remove('active');
+  feed.classList.remove('hidden');
+  cveFeed.classList.add('hidden');
+  window.Sounds?.click();
+});
+
+tabCve.addEventListener('click', () => {
+  tabCve.classList.add('active');
+  tabNews.classList.remove('active');
+  cveFeed.classList.remove('hidden');
+  feed.classList.add('hidden');
+  window.Sounds?.click();
+  if (!cveLoaded) refreshCves();
+});
 
 async function refreshNews() {
   try {
@@ -52,6 +116,7 @@ async function refreshNews() {
 
 refreshNews();
 setInterval(refreshNews, 5 * 60 * 1000);
+setInterval(() => { cveLoaded = false; if (!cveFeed.classList.contains('hidden')) refreshCves(); }, 60 * 60 * 1000);
 
 // ── Chart.js setup ──
 const canvas = document.getElementById('attackChart');
