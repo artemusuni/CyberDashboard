@@ -272,6 +272,17 @@ const FEEDS = [
   { url: 'https://www.cisa.gov/cybersecurity-advisories/all.xml', source: 'CISA' },
 ];
 
+const CUSTOM_FEEDS_FILE = path.join(__dirname, 'cache', 'custom-feeds.json');
+
+function readCustomFeeds() {
+  try { return JSON.parse(fs.readFileSync(CUSTOM_FEEDS_FILE, 'utf8')); } catch {}
+  return [];
+}
+
+function writeCustomFeeds(list) {
+  fs.writeFileSync(CUSTOM_FEEDS_FILE, JSON.stringify(list));
+}
+
 const CRITICAL_KEYWORDS = ['zero-day','0-day','ransomware','critical','rce','remote code','exploit','breach','backdoor','apt'];
 const WARNING_KEYWORDS  = ['vulnerability','cve','patch','advisory','malware','phishing','ddos','botnet','leak'];
 
@@ -298,8 +309,10 @@ const NEWS_TTL  = 5 * 60 * 1000;
 
 async function fetchNews() {
   if (Date.now() - newsFetched < NEWS_TTL && newsCache.length > 0) return newsCache;
+  const customFeeds = readCustomFeeds().map(f => ({ url: f.url, source: f.name || new URL(f.url).hostname }));
+  const allFeeds = [...FEEDS, ...customFeeds];
   const results = await Promise.allSettled(
-    FEEDS.map(f => parser.parseURL(f.url).then(feed =>
+    allFeeds.map(f => parser.parseURL(f.url).then(feed =>
       feed.items.slice(0, 8).map(item => ({
         title:    item.title || 'Untitled',
         link:     item.link  || '#',
@@ -571,6 +584,35 @@ app.delete('/api/watchlist/:ip', (req, res) => {
   const ip = decodeURIComponent(req.params.ip);
   const list = readWatchlist().filter(x => x !== ip);
   writeWatchlist(list);
+  res.json({ ok: true, list });
+});
+
+// ── Custom RSS feed routes ──
+app.get('/api/feeds', (req, res) => {
+  res.json(readCustomFeeds());
+});
+
+app.post('/api/feeds', (req, res) => {
+  const { url, name } = req.body;
+  if (!url || typeof url !== 'string') return res.status(400).json({ error: 'url required' });
+  let parsed;
+  try { parsed = new URL(url.trim()); } catch { return res.status(400).json({ error: 'invalid URL' }); }
+  if (!['http:', 'https:'].includes(parsed.protocol)) return res.status(400).json({ error: 'URL must be http or https' });
+  const list = readCustomFeeds();
+  if (list.find(f => f.url === parsed.href)) return res.json({ ok: true, list });
+  list.push({ url: parsed.href, name: (name || '').trim() || parsed.hostname });
+  writeCustomFeeds(list);
+  newsCache = []; // bust news cache so new feed appears immediately
+  res.json({ ok: true, list });
+});
+
+app.delete('/api/feeds/:idx', (req, res) => {
+  const idx = parseInt(req.params.idx, 10);
+  const list = readCustomFeeds();
+  if (isNaN(idx) || idx < 0 || idx >= list.length) return res.status(400).json({ error: 'invalid index' });
+  list.splice(idx, 1);
+  writeCustomFeeds(list);
+  newsCache = [];
   res.json({ ok: true, list });
 });
 
