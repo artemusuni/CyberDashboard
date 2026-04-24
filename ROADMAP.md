@@ -96,7 +96,7 @@
 | ✅ | Top attackers leaderboard on dashboard |
 | ✅ | Export attack history as CSV from Analytics (7D, 30D, countries) |
 | ✅ | CVE lookup on IP Lookup page (tab + NVD API, cached in SQLite) |
-| ⬜ | Full mobile responsiveness on all new pages |
+| ✅ | Full mobile responsiveness on all new pages |
 
 ---
 
@@ -112,6 +112,22 @@
 | ⬜ | GitHub Actions CI (lint + basic tests on push) |
 | ⬜ | GitHub repo topics: cybersecurity, dashboard, threat-intelligence, nodejs |
 | ⬜ | Proper open source license (MIT) — already in README, confirm in repo |
+
+---
+
+## Phase F — Accessibility (A11y)
+*Goal: usable by everyone, including users with disabilities*
+
+| Status | Feature |
+|--------|---------|
+| ⬜ 🔥 | Keyboard-only navigation — all interactive elements reachable without mouse |
+| ⬜ 🔥 | Screen reader support — ARIA labels on panels, live regions for attack counters |
+| ⬜ | High-contrast mode — stronger borders and text for low-vision users |
+| ⬜ | `prefers-reduced-motion` — disable animations/scanlines for vestibular disorders |
+| ⬜ | Sound alerts paired with visual flash for hearing-impaired users |
+| ⬜ | Focus indicators — visible focus rings on all interactive elements |
+| ⬜ | Alt text and descriptive titles on globe, charts, and CVE cards |
+| ⬜ | `prefers-color-scheme` — optional light theme for photosensitive users |
 
 ---
 
