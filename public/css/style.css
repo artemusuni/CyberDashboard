@@ -490,6 +490,52 @@ body::after {
 }
 
 /* ════════════════════════════════
+   NEWS / CVE TABS
+════════════════════════════════ */
+.news-tabs {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+}
+
+.news-tab {
+  background: none;
+  border: 1px solid var(--border);
+  color: var(--text-dim);
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 1px;
+  padding: 2px 8px;
+  border-radius: 2px;
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s, box-shadow 0.15s;
+}
+
+.news-tab:hover {
+  color: var(--cyan);
+  border-color: var(--cyan);
+}
+
+.news-tab.active {
+  color: var(--cyan);
+  border-color: var(--cyan);
+  box-shadow: 0 0 6px rgba(0,229,255,0.25);
+}
+
+.hidden { display: none !important; }
+
+.cve-score-badge {
+  font-size: 9px;
+  padding: 1px 6px;
+  border-radius: 2px;
+  letter-spacing: 1px;
+}
+
+.cve-score-badge.critical { background: rgba(255,45,85,0.15);  color: var(--red);    border: 1px solid var(--red); }
+.cve-score-badge.warning  { background: rgba(255,215,0,0.1);   color: var(--yellow); border: 1px solid var(--yellow); }
+.cve-score-badge.info     { background: rgba(0,229,255,0.08);  color: var(--cyan);   border: 1px solid var(--cyan); }
+
+/* ════════════════════════════════
    CHART PANEL
 ════════════════════════════════ */
 .panel-chart { grid-column: 2; grid-row: 1 / 3; }

@@ -446,6 +446,29 @@ app.get('/api/top-countries', (req, res) => {
 // ── CVE lookup (NVD API v2, no key required) ──
 const NVD_BASE = 'https://services.nvd.nist.gov/rest/json/cves/2.0';
 
+let cveRecentCache = null; // { fetchedAt, items }
+const CVE_RECENT_TTL = 60 * 60 * 1000; // 1 hour
+
+async function fetchRecentCves() {
+  if (cveRecentCache && Date.now() - cveRecentCache.fetchedAt < CVE_RECENT_TTL) {
+    return cveRecentCache.items;
+  }
+  const end = new Date();
+  const start = new Date(end - 7 * 24 * 60 * 60 * 1000);
+  const fmt = d => d.toISOString().split('.')[0] + '.000';
+  const url = `${NVD_BASE}?pubStartDate=${fmt(start)}&pubEndDate=${fmt(end)}&resultsPerPage=20`;
+  const r = await fetch(url, { headers: { 'User-Agent': 'CyberDashboard/1.0' } });
+  if (!r.ok) throw new Error(`NVD API ${r.status}`);
+  const { vulnerabilities = [] } = await r.json();
+  const items = vulnerabilities
+    .map(parseCve)
+    .filter(c => c.score !== null)
+    .sort((a, b) => b.score - a.score)
+    .slice(0, 10);
+  cveRecentCache = { fetchedAt: Date.now(), items };
+  return items;
+}
+
 function parseCve(raw) {
   const cve     = raw.cve;
   const desc    = (cve.descriptions ?? []).find(d => d.lang === 'en')?.value ?? '';
@@ -458,6 +481,14 @@ function parseCve(raw) {
   const refs    = (cve.references ?? []).slice(0, 5).map(r => ({ url: r.url, tags: r.tags ?? [] }));
   return { id: cve.id, description: desc, score, severity, vector, cwes, refs, published: cve.published, lastModified: cve.lastModified };
 }
+
+app.get('/api/cve/recent', async (req, res) => {
+  try {
+    res.json(await fetchRecentCves());
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
 
 app.get('/api/cve/search', async (req, res) => {
   const q = (req.query.q || '').trim().slice(0, 100);
