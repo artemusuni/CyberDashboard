@@ -61,8 +61,9 @@ function renderCves(items) {
     const desc  = c.description.length > 160 ? c.description.slice(0, 160) + '…' : c.description;
     const date  = c.published ? new Date(c.published).toLocaleDateString('en-GB', { day:'2-digit', month:'short', year:'numeric' }) : '';
     const nvdUrl = `https://nvd.nist.gov/vuln/detail/${c.id}`;
+    const titleAttr = c.description.replace(/"/g, '&quot;');
     return `
-      <a class="news-item cve-news-item" href="${nvdUrl}" target="_blank" rel="noopener">
+      <a class="news-item cve-news-item" href="${nvdUrl}" target="_blank" rel="noopener" title="${titleAttr}">
         <div class="news-item-top">
           <span class="news-tag ${sc}">${c.id}</span>
           <span class="cve-score-badge ${sc}">CVSS ${score}</span>
@@ -223,6 +224,9 @@ async function refreshChart() {
       animateCount(document.getElementById('weekCount'),        weekTotal);
       animateCount(document.getElementById('totalAttackCount'), total);
       document.getElementById('peakHour').textContent = peakHour;
+      canvas.setAttribute('aria-label',
+        `Attack frequency bar chart. ${total.toLocaleString()} attacks today. Peak hour: ${peakHour}.`
+      );
     } else {
       // Historical data from SQLite
       const res  = await fetch(`/api/history/${currentRange}`);

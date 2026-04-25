@@ -1807,3 +1807,36 @@ body::after {
   background-size: 400px 100%;
   animation: shimmer 1.4s infinite linear;
 }
+
+/* ════════════════════════════════
+   VISUAL ALERT FLASH (deaf/hearing-impaired)
+   ════════════════════════════════ */
+#alertFlash {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 10001;
+  opacity: 0;
+}
+
+@keyframes flash-warn {
+  0%   { opacity: 0;   box-shadow: inset 0 0 0 5px var(--yellow); background: rgba(255,215,0,0.06); }
+  15%  { opacity: 1;   box-shadow: inset 0 0 0 5px var(--yellow); background: rgba(255,215,0,0.10); }
+  100% { opacity: 0;   box-shadow: inset 0 0 0 5px var(--yellow); background: rgba(255,215,0,0); }
+}
+
+@keyframes flash-crit {
+  0%   { opacity: 0;   box-shadow: inset 0 0 0 5px var(--red); background: rgba(255,45,85,0.08); }
+  10%  { opacity: 1;   box-shadow: inset 0 0 0 5px var(--red); background: rgba(255,45,85,0.14); }
+  40%  { opacity: 0.7; box-shadow: inset 0 0 0 5px var(--red); background: rgba(255,45,85,0.10); }
+  60%  { opacity: 1;   box-shadow: inset 0 0 0 5px var(--red); background: rgba(255,45,85,0.14); }
+  100% { opacity: 0;   box-shadow: inset 0 0 0 5px var(--red); background: rgba(255,45,85,0); }
+}
+
+#alertFlash.flash-warn { animation: flash-warn 0.7s ease-out forwards; }
+#alertFlash.flash-crit { animation: flash-crit 1.0s ease-out forwards; }
+
+@media (prefers-reduced-motion: reduce) {
+  #alertFlash.flash-warn { animation: none; opacity: 1; box-shadow: inset 0 0 0 5px var(--yellow); background: rgba(255,215,0,0.1); }
+  #alertFlash.flash-crit { animation: none; opacity: 1; box-shadow: inset 0 0 0 5px var(--red);    background: rgba(255,45,85,0.12); }
+}

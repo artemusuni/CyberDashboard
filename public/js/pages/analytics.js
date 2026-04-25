@@ -69,7 +69,7 @@ export async function mountAnalytics(container) {
           </div>
           <div class="analytics-chart-wrap">
             <div class="sk-chart" id="skWeek">${skBars()}</div>
-            <canvas id="chartWeek" hidden></canvas>
+            <canvas id="chartWeek" hidden role="img" aria-label="Bar chart: attacks over last 7 days"></canvas>
           </div>
         </div>
 
@@ -79,7 +79,7 @@ export async function mountAnalytics(container) {
           </div>
           <div class="analytics-chart-wrap">
             <div class="sk-chart" id="skMonth">${skBars()}</div>
-            <canvas id="chartMonth" hidden></canvas>
+            <canvas id="chartMonth" hidden role="img" aria-label="Bar chart: attacks over last 30 days"></canvas>
           </div>
         </div>
 
@@ -89,7 +89,7 @@ export async function mountAnalytics(container) {
           </div>
           <div class="analytics-chart-wrap">
             <div class="sk-chart" id="skCountries">${skBars()}</div>
-            <canvas id="chartCountries" hidden></canvas>
+            <canvas id="chartCountries" hidden role="img" aria-label="Bar chart: top attacking countries"></canvas>
           </div>
         </div>
 
@@ -99,7 +99,7 @@ export async function mountAnalytics(container) {
           </div>
           <div class="analytics-chart-wrap">
             <div class="sk-donut" id="skSeverity"><div class="sk-donut-ring"></div></div>
-            <canvas id="chartSeverity" hidden></canvas>
+            <canvas id="chartSeverity" hidden role="img" aria-label="Doughnut chart: attack severity breakdown — critical, warning, info"></canvas>
           </div>
         </div>
 
