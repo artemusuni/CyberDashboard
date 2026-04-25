@@ -66,7 +66,7 @@
 | ⬜ | Shodan internet-wide scan data |
 | ✅ | CVE feed from NVD API on news panel |
 | ⬜ | MITRE ATT&CK tags on attacks |
-| ⬜ | User-defined custom RSS feeds via Settings |
+| ✅ | User-defined custom RSS feeds via Settings |
 | ⬜ | Toggle between data sources on globe |
 
 ---

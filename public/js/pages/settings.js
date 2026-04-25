@@ -61,6 +61,27 @@ export function mountSettings(container) {
           </div>
         </div>
 
+        <div class="panel settings-panel" id="customFeedsPanel">
+          <div class="panel-header"><span class="panel-title">[ CUSTOM RSS FEEDS ]</span></div>
+          <div class="settings-body">
+            <div class="setting-row">
+              <div class="setting-info">
+                <span class="setting-name">Add Feed</span>
+                <span class="setting-desc">Paste any RSS/Atom feed URL. Articles appear in the news panel.</span>
+              </div>
+            </div>
+            <div class="setting-row setting-row-col">
+              <div style="display:flex;gap:8px;width:100%;">
+                <input type="text" class="setting-input" id="feedName" placeholder="Label (optional)" spellcheck="false" style="flex:0 0 140px;" />
+                <input type="text" class="setting-input" id="feedUrl" placeholder="https://example.com/feed.xml" spellcheck="false" style="flex:1;" />
+                <button class="setting-toggle" id="feedAdd">ADD</button>
+              </div>
+            </div>
+            <div id="customFeedItems" class="watchlist-items"></div>
+            <div id="feedStatus" class="setting-desc" style="margin-top:6px;"></div>
+          </div>
+        </div>
+
         <div class="panel settings-panel">
           <div class="panel-header"><span class="panel-title">[ DISPLAY ]</span></div>
           <div class="settings-body">
@@ -70,6 +91,13 @@ export function mountSettings(container) {
                 <span class="setting-desc">Toggle attack alerts and UI sounds.</span>
               </div>
               <button class="setting-toggle" id="settingSoundToggle">OFF</button>
+            </div>
+            <div class="setting-row">
+              <div class="setting-info">
+                <span class="setting-name">High Contrast Mode</span>
+                <span class="setting-desc">Stronger borders and brighter text for low-vision users.</span>
+              </div>
+              <button class="setting-toggle" id="hcToggle" aria-pressed="false">OFF</button>
             </div>
             <div class="setting-row">
               <div class="setting-info">
@@ -314,6 +342,73 @@ export function mountSettings(container) {
   });
 
   loadWatchlist();
+
+  // ── Custom RSS feeds panel ──
+  function setFeedStatus(msg, ok) {
+    const el = container.querySelector('#feedStatus');
+    el.textContent = msg;
+    el.style.color = ok ? 'var(--green)' : 'var(--red)';
+  }
+
+  function renderCustomFeeds(list) {
+    const el = container.querySelector('#customFeedItems');
+    if (!list.length) {
+      el.innerHTML = '<div class="watchlist-empty">No custom feeds added</div>';
+      return;
+    }
+    el.innerHTML = list.map((f, i) => `
+      <div class="watchlist-item">
+        <div style="display:flex;flex-direction:column;gap:2px;overflow:hidden;">
+          <span class="watchlist-ip">${f.name}</span>
+          <span class="setting-desc" style="font-size:10px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${f.url}</span>
+        </div>
+        <button class="watchlist-remove" data-idx="${i}">✕</button>
+      </div>
+    `).join('');
+    el.querySelectorAll('.watchlist-remove').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        try {
+          const res = await fetch(`/api/feeds/${btn.dataset.idx}`, { method: 'DELETE' });
+          const data = await res.json();
+          renderCustomFeeds(data.list);
+          window.Sounds?.click();
+        } catch { setFeedStatus('ERROR removing feed', false); }
+      });
+    });
+  }
+
+  async function loadCustomFeeds() {
+    try {
+      const res = await fetch('/api/feeds');
+      renderCustomFeeds(await res.json());
+    } catch { setFeedStatus('ERROR loading feeds', false); }
+  }
+
+  container.querySelector('#feedAdd').addEventListener('click', async () => {
+    const url  = container.querySelector('#feedUrl').value.trim();
+    const name = container.querySelector('#feedName').value.trim();
+    if (!url) return;
+    try {
+      const res = await fetch('/api/feeds', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url, name }),
+      });
+      if (!res.ok) throw new Error((await res.json()).error);
+      const data = await res.json();
+      renderCustomFeeds(data.list);
+      container.querySelector('#feedUrl').value  = '';
+      container.querySelector('#feedName').value = '';
+      setFeedStatus('Feed added — articles will appear in the news panel within 5 min', true);
+      window.Sounds?.click();
+    } catch (e) { setFeedStatus(`ERROR: ${e.message}`, false); }
+  });
+
+  container.querySelector('#feedUrl').addEventListener('keydown', e => {
+    if (e.key === 'Enter') container.querySelector('#feedAdd').click();
+  });
+
+  loadCustomFeeds();
 
   // ── High-Contrast toggle ──
   const hcBtn = container.querySelector('#hcToggle');
