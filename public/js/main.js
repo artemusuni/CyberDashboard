@@ -274,13 +274,57 @@ async function refreshLeaders() {
 refreshLeaders();
 setInterval(refreshLeaders, 60000);
 
-// ── Keyboard shortcuts ──
+// ── Keyboard shortcuts + arrow-key nav on sidebar ──
 const KEY_MAP = { d: 'dashboard', t: 'threatmap', a: 'analytics', i: 'iplookup', s: 'settings' };
+const navItems = Array.from(document.querySelectorAll('.nav-item'));
+
+// Announce page changes to screen readers
+function srAnnounce(msg) {
+  const el = document.getElementById('srLive');
+  if (!el) return;
+  el.textContent = '';
+  requestAnimationFrame(() => { el.textContent = msg; });
+}
+
+// Arrow keys cycle through sidebar nav items
+document.querySelector('.nav-list')?.addEventListener('keydown', e => {
+  if (!['ArrowUp', 'ArrowDown', 'Enter', ' '].includes(e.key)) return;
+  e.preventDefault();
+  const focused = document.activeElement;
+  const idx = navItems.indexOf(focused);
+  if (e.key === 'ArrowDown') navItems[(idx + 1) % navItems.length]?.focus();
+  if (e.key === 'ArrowUp')   navItems[(idx - 1 + navItems.length) % navItems.length]?.focus();
+  if (e.key === 'Enter' || e.key === ' ') focused.click();
+});
+
+// Enter/Space on nav items (tabindex="0") triggers navigation
+navItems.forEach(item => {
+  item.addEventListener('click', () => {
+    const page = item.dataset.page;
+    const label = item.getAttribute('aria-label') || page;
+    navItems.forEach(n => n.setAttribute('aria-current', 'false'));
+    item.setAttribute('aria-current', 'page');
+    srAnnounce(`Navigated to ${label}`);
+  });
+});
+
 window.addEventListener('keydown', e => {
   if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.metaKey || e.ctrlKey || e.altKey) return;
   const page = KEY_MAP[e.key.toLowerCase()];
   if (!page) return;
-  // Click the matching nav item so router.js handles navigation
   const navItem = document.querySelector(`.nav-item[data-page="${page}"]`);
   if (navItem) { window.Sounds?.click(); navItem.click(); }
+});
+
+// Sync sound button aria-pressed state
+document.getElementById('soundToggle')?.addEventListener('click', function() {
+  const isOn = this.classList.contains('sound-on');
+  this.setAttribute('aria-pressed', String(isOn));
+});
+
+// Sidebar toggle aria-expanded
+document.getElementById('sidebarToggle')?.addEventListener('click', function() {
+  const sidebar = document.getElementById('sidebar');
+  const collapsed = sidebar?.classList.contains('collapsed');
+  this.setAttribute('aria-expanded', String(!collapsed));
 });

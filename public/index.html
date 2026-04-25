@@ -7,35 +7,36 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="css/style.css" />
+  <script>if (localStorage.getItem('highContrast') === 'true') document.documentElement.classList.add('high-contrast');</script>
 </head>
 <body>
 
   <!-- Boot overlay -->
-  <div id="bootOverlay">
+  <div id="bootOverlay" role="status" aria-label="System initializing">
     <div class="boot-inner">
       <div class="boot-logo">&gt;&gt; CYBER<span>DASHBOARD</span></div>
-      <div class="boot-lines" id="bootLines"></div>
-      <div class="boot-bar-wrap"><div class="boot-bar" id="bootBar"></div></div>
+      <div class="boot-lines" id="bootLines" aria-hidden="true"></div>
+      <div class="boot-bar-wrap" aria-hidden="true"><div class="boot-bar" id="bootBar"></div></div>
     </div>
   </div>
 
   <!-- IP Drill-down panel -->
-  <div id="ipPanel" class="ip-panel">
+  <div id="ipPanel" class="ip-panel" role="dialog" aria-modal="true" aria-label="IP Report">
     <div class="ip-panel-header">
       <span class="ip-panel-title">[ IP REPORT ]</span>
-      <button class="ip-panel-close" id="ipPanelClose">&times;</button>
+      <button class="ip-panel-close" id="ipPanelClose" aria-label="Close IP report">&times;</button>
     </div>
     <div class="ip-panel-body" id="ipPanelBody"></div>
   </div>
-  <div id="ipPanelOverlay" class="ip-panel-overlay"></div>
+  <div id="ipPanelOverlay" class="ip-panel-overlay" aria-hidden="true"></div>
 
   <!-- Topbar -->
-  <header class="topbar">
+  <header class="topbar" role="banner">
     <div class="topbar-left">
-      <button class="sidebar-toggle" id="sidebarToggle">&#9776;</button>
-      <span class="logo">&gt;&gt; CYBER<span class="accent">DASHBOARD</span></span>
+      <button class="sidebar-toggle" id="sidebarToggle" aria-label="Toggle sidebar" aria-expanded="true">&#9776;</button>
+      <span class="logo" aria-label="CyberDashboard">&gt;&gt; CYBER<span class="accent">DASHBOARD</span></span>
     </div>
-    <div class="topbar-center">
+    <div class="topbar-center" aria-hidden="true">
       <span class="status-dot"></span>
       <span class="status-text">LIVE FEED ACTIVE</span>
       <span class="topbar-divider">|</span>
@@ -43,41 +44,44 @@
       <span class="total-count" id="totalAttackCount">0</span>
     </div>
     <div class="topbar-right">
-      <button class="sound-btn" id="soundToggle" title="Toggle sounds">
-        <span id="soundIcon">&#128263;</span>
+      <button class="sound-btn" id="soundToggle" aria-label="Toggle sound effects" aria-pressed="false">
+        <span id="soundIcon" aria-hidden="true">&#128263;</span>
       </button>
-      <span id="clock"></span>
+      <span id="clock" aria-live="off" aria-label="Current UTC time"></span>
     </div>
   </header>
+
+  <!-- Screen reader live region for important alerts -->
+  <div id="srLive" aria-live="polite" aria-atomic="true" class="sr-only"></div>
 
   <!-- App shell -->
   <div class="app-shell">
 
     <!-- Sidebar -->
-    <nav class="sidebar" id="sidebar">
-      <ul class="nav-list">
-        <li class="nav-item active" data-page="dashboard">
-          <span class="nav-icon">&#9643;</span>
+    <nav class="sidebar" id="sidebar" aria-label="Main navigation">
+      <ul class="nav-list" role="menubar" aria-label="Pages">
+        <li class="nav-item active" data-page="dashboard" role="menuitem" tabindex="0" aria-label="Dashboard" aria-current="page">
+          <span class="nav-icon" aria-hidden="true">&#9643;</span>
           <span class="nav-label">DASHBOARD</span>
         </li>
-        <li class="nav-item" data-page="threatmap">
-          <span class="nav-icon">&#9685;</span>
+        <li class="nav-item" data-page="threatmap" role="menuitem" tabindex="0" aria-label="Threat Map">
+          <span class="nav-icon" aria-hidden="true">&#9685;</span>
           <span class="nav-label">THREAT MAP</span>
         </li>
-        <li class="nav-item" data-page="analytics">
-          <span class="nav-icon">&#9636;</span>
+        <li class="nav-item" data-page="analytics" role="menuitem" tabindex="0" aria-label="Analytics">
+          <span class="nav-icon" aria-hidden="true">&#9636;</span>
           <span class="nav-label">ANALYTICS</span>
         </li>
-        <li class="nav-item" data-page="iplookup">
-          <span class="nav-icon">&#9906;</span>
+        <li class="nav-item" data-page="iplookup" role="menuitem" tabindex="0" aria-label="IP Lookup">
+          <span class="nav-icon" aria-hidden="true">&#9906;</span>
           <span class="nav-label">IP LOOKUP</span>
         </li>
-        <li class="nav-item" data-page="settings">
-          <span class="nav-icon">&#9881;</span>
+        <li class="nav-item" data-page="settings" role="menuitem" tabindex="0" aria-label="Settings">
+          <span class="nav-icon" aria-hidden="true">&#9881;</span>
           <span class="nav-label">SETTINGS</span>
         </li>
       </ul>
-      <div class="nav-footer">v1.0 // SECURE</div>
+      <div class="nav-footer" aria-hidden="true">v1.0 // SECURE</div>
     </nav>
 
     <!-- Page content -->
@@ -86,16 +90,16 @@
       <!-- PAGE: Dashboard -->
       <div class="page active" id="page-dashboard">
         <div class="dashboard">
-          <section class="panel panel-news">
+          <section class="panel panel-news" aria-label="Threat Intelligence Feed">
             <div class="panel-header">
-              <span class="panel-title">[ THREAT INTELLIGENCE ]</span>
-              <div class="news-tabs">
-                <button class="news-tab active" id="tabNews">NEWS</button>
-                <button class="news-tab" id="tabCve">CVEs</button>
+              <span class="panel-title" aria-hidden="true">[ THREAT INTELLIGENCE ]</span>
+              <div class="news-tabs" role="tablist" aria-label="Feed type">
+                <button class="news-tab active" id="tabNews" role="tab" aria-selected="true" aria-controls="newsFeed">NEWS</button>
+                <button class="news-tab" id="tabCve" role="tab" aria-selected="false" aria-controls="cveFeed">CVEs</button>
               </div>
-              <span class="panel-badge live">LIVE</span>
+              <span class="panel-badge live" aria-hidden="true">LIVE</span>
             </div>
-            <div class="news-feed" id="newsFeed">
+            <div class="news-feed" id="newsFeed" role="tabpanel" aria-label="Cyber news feed" aria-live="polite">
               <div class="sk-news-item">
                 <div class="sk-row"><div class="sk sk-tag"></div><div class="sk sk-source"></div></div>
                 <div class="sk sk-line"></div><div class="sk sk-line sk-line-short"></div>
@@ -113,7 +117,7 @@
                 <div class="sk sk-line"></div><div class="sk sk-line sk-line-short"></div>
               </div>
             </div>
-            <div class="news-feed hidden" id="cveFeed">
+            <div class="news-feed hidden" id="cveFeed" role="tabpanel" aria-label="Recent CVEs" aria-live="polite">
               <div class="sk-news-item">
                 <div class="sk-row"><div class="sk sk-tag"></div><div class="sk sk-source"></div></div>
                 <div class="sk sk-line"></div><div class="sk sk-line sk-line-short"></div>
@@ -129,40 +133,40 @@
             </div>
           </section>
 
-          <section class="panel panel-chart">
+          <section class="panel panel-chart" aria-label="Attack Frequency Chart">
             <div class="panel-header">
-              <span class="panel-title">[ ATTACK FREQUENCY ]</span>
-              <div class="range-tabs">
-                <button class="range-tab active" data-range="day">24H</button>
-                <button class="range-tab" data-range="week">7D</button>
-                <button class="range-tab" data-range="month">30D</button>
+              <span class="panel-title" aria-hidden="true">[ ATTACK FREQUENCY ]</span>
+              <div class="range-tabs" role="group" aria-label="Time range">
+                <button class="range-tab active" data-range="day" aria-pressed="true">24H</button>
+                <button class="range-tab" data-range="week" aria-pressed="false">7D</button>
+                <button class="range-tab" data-range="month" aria-pressed="false">30D</button>
               </div>
             </div>
             <div class="chart-container">
-              <canvas id="attackChart"></canvas>
+              <canvas id="attackChart" role="img" aria-label="Attack frequency bar chart"></canvas>
             </div>
-            <div class="stat-row">
+            <div class="stat-row" aria-label="Attack statistics">
               <div class="stat">
                 <span class="stat-label">TODAY</span>
-                <span class="stat-value" id="todayCount">0</span>
+                <span class="stat-value" id="todayCount" aria-live="polite" aria-label="Attacks today">0</span>
               </div>
               <div class="stat">
                 <span class="stat-label">THIS WEEK</span>
-                <span class="stat-value" id="weekCount">0</span>
+                <span class="stat-value" id="weekCount" aria-live="polite" aria-label="Attacks this week">0</span>
               </div>
               <div class="stat">
                 <span class="stat-label">PEAK HOUR</span>
-                <span class="stat-value" id="peakHour">--:--</span>
+                <span class="stat-value" id="peakHour" aria-live="polite" aria-label="Peak attack hour">--:--</span>
               </div>
             </div>
           </section>
 
-          <section class="panel panel-leaders">
+          <section class="panel panel-leaders" aria-label="Top Attacking Countries">
             <div class="panel-header">
-              <span class="panel-title">[ TOP ATTACKERS ]</span>
-              <span class="panel-badge live">LIVE</span>
+              <span class="panel-title" aria-hidden="true">[ TOP ATTACKERS ]</span>
+              <span class="panel-badge live" aria-hidden="true">LIVE</span>
             </div>
-            <ol class="leaders-list" id="leadersList">
+            <ol class="leaders-list" id="leadersList" aria-label="Top attacker leaderboard" aria-live="polite">
               <li class="sk-leader-item"><div class="sk sk-rank"></div><div class="sk sk-country"></div><div class="sk sk-bar-sk"></div><div class="sk sk-num"></div></li>
               <li class="sk-leader-item"><div class="sk sk-rank"></div><div class="sk sk-country"></div><div class="sk sk-bar-sk"></div><div class="sk sk-num"></div></li>
               <li class="sk-leader-item"><div class="sk sk-rank"></div><div class="sk sk-country"></div><div class="sk sk-bar-sk"></div><div class="sk sk-num"></div></li>
@@ -172,15 +176,15 @@
             </ol>
           </section>
 
-          <section class="panel panel-globe">
+          <section class="panel panel-globe" aria-label="Global Attack Map">
             <div class="panel-header">
-              <span class="panel-title">[ GLOBAL ATTACK MAP ]</span>
+              <span class="panel-title" aria-hidden="true">[ GLOBAL ATTACK MAP ]</span>
               <div class="panel-header-right">
-                <span class="live-count">TRACKED: <span id="liveAttackCount">0</span></span>
-                <span class="panel-badge live">LIVE</span>
+                <span class="live-count" aria-hidden="true">TRACKED: <span id="liveAttackCount">0</span></span>
+                <span class="panel-badge live" aria-hidden="true">LIVE</span>
               </div>
             </div>
-            <div id="globeContainer"></div>
+            <div id="globeContainer" role="img" aria-label="3D globe showing live cyber attack arcs between countries"></div>
           </section>
         </div>
       </div>

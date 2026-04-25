@@ -1,6 +1,37 @@
 /* ── Reset & Base ── */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
+/* ── Screen reader only — visually hidden but accessible ── */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0,0,0,0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ── Focus indicators — neon outline for keyboard users ── */
+:focus-visible {
+  outline: 2px solid var(--cyan);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 4px rgba(0,229,255,0.15);
+}
+
+/* Nav items use tabindex so need explicit focus style */
+.nav-item:focus-visible {
+  outline: 2px solid var(--cyan);
+  outline-offset: -2px;
+  background: rgba(0,229,255,0.08);
+}
+
+/* Buttons already handle outline via :focus-visible, suppress default */
+button:focus:not(:focus-visible) { outline: none; }
+a:focus:not(:focus-visible)      { outline: none; }
+
 :root {
   --bg:        #0a0a0f;
   --bg-panel:  #0d0d14;
@@ -1055,6 +1086,29 @@ body::after {
 }
 
 /* ════════════════════════════════
+   REDUCED MOTION
+   Respects prefers-reduced-motion for users with
+   vestibular disorders or motion sensitivity.
+════════════════════════════════ */
+@media (prefers-reduced-motion: reduce) {
+  /* Kill all animations and transitions */
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+
+  /* Remove scanline overlay */
+  body::after { display: none; }
+
+  /* Skeleton shimmer becomes static */
+  .sk { background: var(--border); }
+
+  /* Remove globe arc/ring pulse effects (globe.gl handles these in JS) */
+  .panel-badge.live { animation: none; }
+}
+
+/* ════════════════════════════════
    SHARED PAGE STYLES
 ════════════════════════════════ */
 .page-title {
@@ -1752,4 +1806,98 @@ body::after {
   );
   background-size: 400px 100%;
   animation: shimmer 1.4s infinite linear;
+}
+
+/* ════════════════════════════════
+   HIGH-CONTRAST MODE
+   Applied via html.high-contrast (toggled in Settings or prefers-contrast)
+   ════════════════════════════════ */
+
+html.high-contrast {
+  /* Override root variables for stronger contrast */
+  --bg:        #000008;
+  --bg-panel:  #05050f;
+  --bg-header: #08081a;
+  --border:    rgba(0,229,255,0.65);
+  --text:      #ffffff;
+  --text-dim:  #9898b8;
+  --dim:       #0c0c1e;
+  --glow-g:    0 0 12px #00ff88cc;
+  --glow-c:    0 0 12px #00e5ffcc;
+  --glow-r:    0 0 12px #ff2d55cc;
+  --glow-y:    0 0 12px #ffd700cc;
+}
+
+/* Remove scanlines — they reduce readability at high contrast */
+html.high-contrast body::after { opacity: 0; }
+
+/* Panels — stronger borders */
+html.high-contrast .panel          { border-color: rgba(0,229,255,0.55); }
+html.high-contrast .panel-header   { border-bottom-color: rgba(0,229,255,0.45); }
+html.high-contrast .topbar         { border-bottom-color: rgba(0,229,255,0.5); }
+html.high-contrast .sidebar        { border-right-color: rgba(0,229,255,0.45); }
+html.high-contrast .ip-panel       { border-color: rgba(0,229,255,0.7); }
+html.high-contrast .news-item      { border-bottom-color: rgba(0,229,255,0.25); }
+html.high-contrast .leaders-item   { border-bottom-color: rgba(0,229,255,0.2); }
+html.high-contrast .setting-row    { border-bottom-color: rgba(0,229,255,0.25); }
+html.high-contrast .analytics-card { border-color: rgba(0,229,255,0.45); }
+
+/* Text — brighter dim elements */
+html.high-contrast .panel-title    { color: rgba(0,229,255,1); }
+html.high-contrast .panel-badge    { opacity: 1; }
+html.high-contrast .stat-label     { color: rgba(0,229,255,0.85); }
+html.high-contrast .news-source    { color: rgba(0,229,255,0.9); }
+html.high-contrast .news-time      { color: rgba(0,229,255,0.7); }
+html.high-contrast .leaders-rank   { color: rgba(0,229,255,1); }
+html.high-contrast .leaders-count  { color: rgba(0,229,255,1); }
+html.high-contrast .leaders-country{ color: #ffffff; }
+html.high-contrast .setting-name   { color: #ffffff; }
+html.high-contrast .setting-desc   { color: #9898b8; }
+html.high-contrast .setting-value  { color: rgba(0,229,255,1); }
+html.high-contrast .nav-label      { color: #ffffff; }
+html.high-contrast .logo           { color: #ffffff; }
+html.high-contrast .topbar-left .logo { text-shadow: 0 0 10px rgba(0,229,255,0.8); }
+html.high-contrast .status-text    { color: rgba(0,229,255,0.95); }
+html.high-contrast .total-label    { color: rgba(0,229,255,0.95); }
+html.high-contrast .total-count    { text-shadow: 0 0 10px rgba(0,255,136,0.9); }
+html.high-contrast #clock          { color: rgba(0,229,255,1); }
+
+/* Nav active / hover — more visible */
+html.high-contrast .nav-item.active { border-left: 3px solid var(--cyan); background: rgba(0,229,255,0.12); }
+html.high-contrast .nav-item:hover  { background: rgba(0,229,255,0.1); }
+
+/* Leaders bar — more visible */
+html.high-contrast .leaders-bar { background: rgba(0,229,255,0.8); box-shadow: 0 0 6px rgba(0,229,255,0.5); }
+html.high-contrast .leaders-bar-wrap { background: rgba(0,229,255,0.12); }
+
+/* Stat values — brighter glow */
+html.high-contrast .stat-value { text-shadow: 0 0 10px var(--cyan); }
+
+/* Focus indicator — even more visible in high-contrast */
+html.high-contrast :focus-visible {
+  outline: 2px solid #ffffff;
+  box-shadow: 0 0 0 4px rgba(0,229,255,0.5);
+}
+
+/* ── Auto-enable for users who prefer more contrast ── */
+@media (prefers-contrast: more) {
+  html {
+    --bg:        #000008;
+    --bg-panel:  #05050f;
+    --bg-header: #08081a;
+    --border:    rgba(0,229,255,0.65);
+    --text:      #ffffff;
+    --text-dim:  #9898b8;
+    --dim:       #0c0c1e;
+  }
+  body::after { opacity: 0; }
+  .panel          { border-color: rgba(0,229,255,0.55); }
+  .panel-header   { border-bottom-color: rgba(0,229,255,0.45); }
+  .topbar         { border-bottom-color: rgba(0,229,255,0.5); }
+  .sidebar        { border-right-color: rgba(0,229,255,0.45); }
+  .panel-title    { color: rgba(0,229,255,1); }
+  .stat-label     { color: rgba(0,229,255,0.85); }
+  .news-source    { color: rgba(0,229,255,0.9); }
+  .setting-name   { color: #ffffff; }
+  .nav-label      { color: #ffffff; }
 }
