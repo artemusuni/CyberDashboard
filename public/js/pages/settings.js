@@ -73,6 +73,13 @@ export function mountSettings(container) {
             </div>
             <div class="setting-row">
               <div class="setting-info">
+                <span class="setting-name">High Contrast Mode</span>
+                <span class="setting-desc">Stronger borders and brighter text for low-vision users.</span>
+              </div>
+              <button class="setting-toggle" id="hcToggle" aria-pressed="false">OFF</button>
+            </div>
+            <div class="setting-row">
+              <div class="setting-info">
                 <span class="setting-name">Globe Auto-Rotate</span>
                 <span class="setting-desc">Automatically rotate the 3D globe.</span>
               </div>
@@ -291,4 +298,21 @@ export function mountSettings(container) {
   });
 
   loadWatchlist();
+
+  // ── High-Contrast toggle ──
+  const hcBtn = container.querySelector('#hcToggle');
+  function syncHC() {
+    const on = document.documentElement.classList.contains('high-contrast');
+    hcBtn.textContent = on ? 'ON' : 'OFF';
+    hcBtn.classList.toggle('active', on);
+    hcBtn.setAttribute('aria-pressed', String(on));
+  }
+  syncHC();
+
+  hcBtn.addEventListener('click', () => {
+    const on = document.documentElement.classList.toggle('high-contrast');
+    localStorage.setItem('highContrast', on);
+    syncHC();
+    window.Sounds?.click();
+  });
 }
