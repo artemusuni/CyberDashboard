@@ -314,4 +314,21 @@ export function mountSettings(container) {
   });
 
   loadWatchlist();
+
+  // ── High-Contrast toggle ──
+  const hcBtn = container.querySelector('#hcToggle');
+  function syncHC() {
+    const on = document.documentElement.classList.contains('high-contrast');
+    hcBtn.textContent = on ? 'ON' : 'OFF';
+    hcBtn.classList.toggle('active', on);
+    hcBtn.setAttribute('aria-pressed', String(on));
+  }
+  syncHC();
+
+  hcBtn.addEventListener('click', () => {
+    const on = document.documentElement.classList.toggle('high-contrast');
+    localStorage.setItem('highContrast', on);
+    syncHC();
+    window.Sounds?.click();
+  });
 }
