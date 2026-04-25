@@ -73,10 +73,10 @@ export function mountSettings(container) {
             </div>
             <div class="setting-row">
               <div class="setting-info">
-                <span class="setting-name">High Contrast Mode</span>
-                <span class="setting-desc">Stronger borders and brighter text for low-vision users.</span>
+                <span class="setting-name">Visual Flash Alerts</span>
+                <span class="setting-desc">Screen border flash on attacks — useful if sound is off (off by default).</span>
               </div>
-              <button class="setting-toggle" id="hcToggle" aria-pressed="false">OFF</button>
+              <button class="setting-toggle" id="flashToggle" aria-pressed="false">OFF</button>
             </div>
             <div class="setting-row">
               <div class="setting-info">
@@ -235,6 +235,22 @@ export function mountSettings(container) {
   soundBtn.addEventListener('click', () => {
     document.getElementById('soundToggle')?.click();
     setTimeout(syncSound, 50);
+  });
+
+  // ── Visual flash toggle ──
+  const flashBtn = container.querySelector('#flashToggle');
+  function syncFlash() {
+    const on = window.FlashAlerts?.enabled ?? false;
+    flashBtn.textContent = on ? 'ON' : 'OFF';
+    flashBtn.classList.toggle('active', on);
+    flashBtn.setAttribute('aria-pressed', String(on));
+  }
+  syncFlash();
+
+  flashBtn.addEventListener('click', () => {
+    if (window.FlashAlerts) window.FlashAlerts.enabled = !window.FlashAlerts.enabled;
+    syncFlash();
+    window.Sounds?.click();
   });
 
   // ── Watchlist panel ──

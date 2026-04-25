@@ -25,13 +25,42 @@ function playTone(freq, type, duration, gain = 0.15) {
   } catch {}
 }
 
+let flashEnabled = localStorage.getItem('visualFlash') === 'true';
+
+function triggerFlash(type) {
+  if (!flashEnabled) return;
+  const el = document.getElementById('alertFlash');
+  if (!el) return;
+  el.classList.remove('flash-warn', 'flash-crit');
+  void el.offsetWidth; // force reflow to restart animation
+  el.classList.add(type === 'critical' ? 'flash-crit' : 'flash-warn');
+  setTimeout(() => el.classList.remove('flash-warn', 'flash-crit'), 1100);
+  const sr = document.getElementById('srLive');
+  if (sr) {
+    sr.textContent = '';
+    requestAnimationFrame(() => {
+      sr.textContent = type === 'critical' ? 'Critical attack alert' : 'Attack warning';
+    });
+  }
+}
+
+window.FlashAlerts = {
+  get enabled() { return flashEnabled; },
+  set enabled(val) {
+    flashEnabled = val;
+    localStorage.setItem('visualFlash', val);
+  },
+};
+
 window.Sounds = {
   click:    () => playTone(800,  'square',   0.04, 0.08),
   alert:    () => {
+    triggerFlash('warning');
     playTone(880, 'sawtooth', 0.12, 0.18);
     setTimeout(() => playTone(660, 'sawtooth', 0.12, 0.18), 140);
   },
   critical: () => {
+    triggerFlash('critical');
     playTone(440, 'sawtooth', 0.18, 0.22);
     setTimeout(() => playTone(330, 'sawtooth', 0.18, 0.22), 180);
     setTimeout(() => playTone(220, 'sawtooth', 0.24, 0.22), 360);

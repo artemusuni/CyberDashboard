@@ -124,9 +124,9 @@
 | ✅ 🔥 | Screen reader support — ARIA labels on panels, live regions for attack counters |
 | ✅ | High-contrast mode — stronger borders and text for low-vision users |
 | ✅ | `prefers-reduced-motion` — disable animations/scanlines for vestibular disorders |
-| ⬜ | Sound alerts paired with visual flash for hearing-impaired users |
+| ✅ | Sound alerts paired with visual flash for hearing-impaired users |
 | ✅ | Focus indicators — visible focus rings on all interactive elements |
-| ⬜ | Alt text and descriptive titles on globe, charts, and CVE cards |
+| ✅ | Alt text and descriptive titles on globe, charts, and CVE cards |
 | ⬜ | `prefers-color-scheme` — optional light theme for photosensitive users |
 
 ---

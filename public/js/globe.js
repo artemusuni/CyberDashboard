@@ -99,6 +99,10 @@ async function refreshGlobe() {
 
     bumpCounter(arcs.length);
     showFlash(arcs);
+    const critCount = arcs.filter(a => a.severity === 'critical').length;
+    container.setAttribute('aria-label',
+      `3D globe showing ${arcs.length} live attack arcs. ${critCount} critical, ${arcs.length - critCount} other attacks detected.`
+    );
   } catch (e) {
     console.error('Globe refresh failed:', e);
   }
